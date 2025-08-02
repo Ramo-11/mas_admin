@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management Dashboard</title>
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-calendar-check"></i> Event Management Dashboard</h1>
+            <p>Manage your events efficiently</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number"><%= stats.total || 0 %></div>
+                    <div class="stat-label">Total Events</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number"><%= stats.published || 0 %></div>
+                    <div class="stat-label">Published</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number"><%= stats.upcoming || 0 %></div>
+                    <div class="stat-label">Upcoming</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number"><%= stats.draft || 0 %></div>
+                    <div class="stat-label">Drafts</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Bar -->
+        <div class="actions">
+            <button class="btn btn-primary" id="create-event-btn">
+                <i class="fas fa-plus"></i> Create Event
+            </button>
+            <div class="filters">
+                <input type="text" id="search" placeholder="Search events..." class="search-input">
+                <select id="filter-category" class="filter-select">
+                    <option value="">All Categories</option>
+                    <option value="community-service">Community Service</option>
+                    <option value="educational">Educational</option>
+                    <option value="religious">Religious</option>
+                    <option value="cultural">Cultural</option>
+                    <option value="youth">Youth</option>
+                    <option value="interfaith">Interfaith</option>
+                    <option value="fundraising">Fundraising</option>
+                    <option value="health-wellness">Health & Wellness</option>
+                    <option value="social">Social</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="conference">Conference</option>
+                    <option value="meeting">Meeting</option>
+                    <option value="other">Other</option>
+                </select>
+                <select id="filter-status" class="filter-select">
+                    <option value="">All Status</option>
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Events Table -->
+        <div class="table-container">
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Start Date</th>
+                        <th>Type</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="events-table">
+                    <% if (events && events.length > 0) { %>
+                        <% events.forEach(event => { %>
+                            <tr data-id="<%= event._id %>">
+                                <td>
+                                    <div class="event-info">
+                                        <strong><%= event.title %></strong>
+                                        <% if (event.featured) { %>
+                                            <i class="fas fa-star featured"></i>
+                                        <% } %>
+                                        <div class="event-desc"><%= event.shortDescription || event.description.substring(0, 60) + '...' %></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge category-<%= event.category %>">
+                                        <%= event.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge status-<%= event.status %>">
+                                        <%= event.status.charAt(0).toUpperCase() + event.status.slice(1) %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="date-time">
+                                        <%= new Date(event.eventDate).toLocaleDateString() %>
+                                        <div class="time"><%= event.startTime %></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge type-<%= event.eventType %>">
+                                        <%= event.eventType.charAt(0).toUpperCase() + event.eventType.slice(1) %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-edit" data-id="<%= event._id %>">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-duplicate" data-id="<%= event._id %>">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-delete" data-id="<%= event._id %>">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <div class="empty-content">
+                                    <i class="fas fa-calendar-times"></i>
+                                    <h3>No events found</h3>
+                                    <p>Create your first event to get started</p>
+                                </div>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal" id="event-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Create Event</h2>
+                <button class="close" id="close-modal">&times;</button>
+            </div>
+            <form id="event-form">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3>Basic Information</h3>
+                    
+                    <div class="form-group">
+                        <label for="title">Event Title *</label>
+                        <input type="text" id="title" name="title" required maxlength="200">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shortDescription">Short Description</label>
+                        <textarea id="shortDescription" name="shortDescription" rows="2" maxlength="300" placeholder="Brief summary for previews and listings"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Full Description *</label>
+                        <textarea id="description" name="description" required rows="4" maxlength="2000"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category *</label>
+                            <select id="category" name="category" required>
+                                <option value="community-service">Community Service</option>
+                                <option value="educational">Educational</option>
+                                <option value="religious">Religious</option>
+                                <option value="cultural">Cultural</option>
+                                <option value="youth">Youth</option>
+                                <option value="interfaith">Interfaith</option>
+                                <option value="fundraising">Fundraising</option>
+                                <option value="health-wellness">Health & Wellness</option>
+                                <option value="social">Social</option>
+                                <option value="workshop">Workshop</option>
+                                <option value="conference">Conference</option>
+                                <option value="meeting">Meeting</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="eventType">Event Type *</label>
+                            <select id="eventType" name="eventType" required>
+                                <option value="in-person">In-Person</option>
+                                <option value="virtual">Virtual</option>
+                                <option value="hybrid">Hybrid</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tags">Tags</label>
+                        <input type="text" id="tags" name="tags" placeholder="Separate tags with commas">
+                        <small>Enter keywords separated by commas (e.g., fundraising, community, charity)</small>
+                    </div>
+                </div>
+
+                <!-- Date & Time -->
+                <div class="form-section">
+                    <h3>Date & Time</h3>
+                    
+                    <div class="form-group">
+                        <label for="eventDate">Event Date *</label>
+                        <input type="date" id="eventDate" name="eventDate" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startTime">Start Time</label>
+                            <input type="time" id="startTime" name="startTime">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="endTime">End Time</label>
+                            <input type="time" id="endTime" name="endTime">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timezone">Timezone</label>
+                        <select id="timezone" name="timezone">
+                            <option value="America/Indiana/Indianapolis">America/Indiana/Indianapolis (EST/EDT)</option>
+                            <option value="America/New_York">America/New_York (EST/EDT)</option>
+                            <option value="America/Chicago">America/Chicago (CST/CDT)</option>
+                            <option value="America/Denver">America/Denver (MST/MDT)</option>
+                            <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div class="form-section">
+                    <h3>Location</h3>
+                    
+                    <div class="form-group">
+                        <label for="venue">Venue Name</label>
+                        <input type="text" id="venue" name="venue">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="street">Street Address</label>
+                        <input type="text" id="street" name="street">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <input type="text" id="city" name="city">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="state">State</label>
+                            <input type="text" id="state" name="state">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="zipCode">ZIP Code</label>
+                            <input type="text" id="zipCode" name="zipCode">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="virtualLink">Virtual Link</label>
+                        <input type="url" id="virtualLink" name="virtualLink" placeholder="https://zoom.us/j/123456789">
+                        <small>For virtual or hybrid events</small>
+                    </div>
+                </div>
+
+                <!-- Speakers -->
+                <div class="form-section">
+                    <h3>Speakers</h3>
+                    <div id="speakers-container">
+                        <div class="speaker-item">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Speaker Name</label>
+                                    <input type="text" name="speaker-name-0" placeholder="Full name">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Title</label>
+                                    <input type="text" name="speaker-title-0" placeholder="Job title or role">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Organization</label>
+                                    <input type="text" name="speaker-organization-0" placeholder="Company or organization">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Photo URL</label>
+                                    <input type="url" name="speaker-photo-0" placeholder="https://example.com/photo.jpg">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Bio</label>
+                                <textarea name="speaker-bio-0" rows="2" placeholder="Brief biography"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="add-speaker" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-plus"></i> Add Another Speaker
+                    </button>
+                </div>
+
+                <!-- Event Images -->
+                <div class="form-section">
+                    <h3>Event Images</h3>
+                    
+                    <!-- Featured Image (Event Flyer) -->
+                    <div class="form-group">
+                        <label>Featured Image (Event Flyer)</label>
+                        <div class="featured-image-container">
+                            <div class="featured-image-upload" id="featuredImageUpload">
+                                <div class="featured-upload-area" id="featuredDropzone">
+                                    <i class="fas fa-image"></i>
+                                    <p>Upload event flyer</p>
+                                    <input type="file" id="featuredImageInput" accept="image/*">
+                                    <button type="button" class="btn btn-secondary btn-sm">
+                                        Choose Flyer
+                                    </button>
+                                </div>
+                                <div class="featured-image-preview" id="featuredImagePreview"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gallery Images -->
+                    <div class="form-group">
+                        <label>Gallery Images</label>
+                        <div class="image-upload-container">
+                            <div class="image-upload-dropzone" id="imageDropzone">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag and drop images here or click to select</p>
+                                <input type="file" id="imageUpload" multiple accept="image/*">
+                                <button type="button" class="btn btn-secondary">
+                                    Choose Images
+                                </button>
+                            </div>
+                            <div class="image-preview-container" id="imagePreviewContainer"></div>
+                            <div class="upload-progress" id="uploadProgress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                </div>
+                                <span class="progress-text" id="progressText">Uploading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="videoUrl">Video URL</label>
+                        <input type="url" id="videoUrl" name="videoUrl" placeholder="https://youtube.com/watch?v=...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="videoTitle">Video Title</label>
+                        <input type="text" id="videoTitle" name="videoTitle" placeholder="Video title">
+                    </div>
+                </div>
+
+                <!-- Registration -->
+                <div class="form-section">
+                    <h3>Registration</h3>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="isRegistrationRequired" name="isRegistrationRequired">
+                            Registration Required
+                        </label>
+                    </div>
+                    
+                    <div id="registration-details">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="maxAttendees">Max Attendees</label>
+                                <input type="number" id="maxAttendees" name="maxAttendees" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="registrationFee">Registration Fee ($)</label>
+                                <input type="number" id="registrationFee" name="registrationFee" min="0" step="0.01">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="registrationDeadline">Registration Deadline</label>
+                            <input type="date" id="registrationDeadline" name="registrationDeadline">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="form-section">
+                    <h3>Event Settings</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="status">Status *</label>
+                            <select id="status" name="status" required>
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="featured" name="featured">
+                                Featured Event
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="isPublic" name="isPublic" checked>
+                                Public Event
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="isRecurring" name="isRecurring">
+                                Recurring Event
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="save-btn">Save Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/admin-dashboard.js"></script>
+</body>
+</html>
