@@ -37,13 +37,13 @@ route.get("/", async (req, res) => {
         // Fetch events
         const events = await Event.find({ isArchived: { $ne: true } })
             .populate('speakers', 'name title organization')
-            .sort({ startDate: -1 });
+            .sort({ eventDate: -1 });
 
         // Calculate stats
         const stats = {
             total: events.length,
             published: events.filter(e => e.status === 'published').length,
-            upcoming: events.filter(e => e.status === 'published' && new Date(e.startDate) > new Date()).length,
+            upcoming: events.filter(e => e.status === 'published' && new Date(e.eventDate) > new Date()).length,
             draft: events.filter(e => e.status === 'draft').length
         };
 

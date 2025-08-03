@@ -249,17 +249,19 @@ const eventSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-eventSchema.index({ startDate: 1, status: 1 });
+eventSchema.index({ eventDate: 1, status: 1 });
 eventSchema.index({ category: 1, status: 1 });
 eventSchema.index({ slug: 1 });
-eventSchema.index({ featured: 1, startDate: 1 });
+eventSchema.index({ featured: 1, eventDate: 1 });
 eventSchema.index({ 'location.coordinates': '2dsphere' });
 eventSchema.index({ tags: 1 });
 
 // Virtual for event duration
 eventSchema.virtual('duration').get(function() {
-    if (this.startDate && this.endDate) {
-        return Math.abs(this.endDate - this.startDate) / (1000 * 60 * 60); // Duration in hours
+    if (this.eventDate && this.endTime && this.startTime) {
+        const start = new Date(`${this.eventDate.toISOString().split('T')[0]}T${this.startTime}`);
+        const end = new Date(`${this.eventDate.toISOString().split('T')[0]}T${this.endTime}`);
+        return Math.abs(end - start) / (1000 * 60 * 60); // Duration in hours
     }
     return 0;
 });
@@ -291,9 +293,9 @@ eventSchema.virtual('computedStatus').get(function() {
         return this.status;
     }
     
-    if (now < this.startDate) {
+    if (now < this.eventDate) {
         return 'upcoming';
-    } else if (now >= this.startDate && now <= this.endDate) {
+    } else if (now >= this.eventDate) {
         return 'ongoing';
     } else {
         return 'completed';
@@ -323,14 +325,8 @@ eventSchema.pre('save', function(next) {
             : this.description;
     }
     
-    // Validate date logic
-    if (this.endDate < this.startDate) {
-        const error = new Error('End date must be after start date');
-        return next(error);
-    }
-    
     // Validate registration deadline
-    if (this.registration.registrationDeadline && this.registration.registrationDeadline > this.startDate) {
+    if (this.registration.registrationDeadline && this.registration.registrationDeadline > this.eventDate) {
         const error = new Error('Registration deadline must be before event start date');
         return next(error);
     }
@@ -341,11 +337,11 @@ eventSchema.pre('save', function(next) {
 // Static method to find upcoming events
 eventSchema.statics.findUpcoming = function(limit = 10) {
     return this.find({
-        startDate: { $gte: new Date() },
+        eventDate: { $gte: new Date() },
         status: 'published',
         isPublic: true
     })
-    .sort({ startDate: 1 })
+    .sort({ eventDate: 1 })
     .limit(limit);
 };
 
@@ -356,7 +352,7 @@ eventSchema.statics.findByCategory = function(category, limit = 10) {
         status: 'published',
         isPublic: true
     })
-    .sort({ startDate: -1 })
+    .sort({ eventDate: -1 })
     .limit(limit);
 };
 
@@ -366,9 +362,9 @@ eventSchema.statics.findFeatured = function(limit = 5) {
         featured: true,
         status: 'published',
         isPublic: true,
-        startDate: { $gte: new Date() }
+        eventDate: { $gte: new Date() }
     })
-    .sort({ startDate: 1 })
+    .sort({ eventDate: 1 })
     .limit(limit);
 };
 

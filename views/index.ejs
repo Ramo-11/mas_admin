@@ -96,7 +96,7 @@
                         <th>Event</th>
                         <th>Category</th>
                         <th>Status</th>
-                        <th>Start Date</th>
+                        <th>Event Date</th>
                         <th>Type</th>
                         <th>Actions</th>
                     </tr>
@@ -126,7 +126,7 @@
                                 </td>
                                 <td>
                                     <div class="date-time">
-                                        <%= new Date(event.eventDate).toLocaleDateString() %>
+                                        <%= new Date(event.eventDate).toLocaleDateString('en-US', { timeZone: 'America/Indiana/Indianapolis' }) %>
                                         <div class="time"><%= event.startTime %></div>
                                     </div>
                                 </td>

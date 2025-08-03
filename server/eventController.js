@@ -109,6 +109,8 @@ const getEvents = async (req, res) => {
             Event.countDocuments(filter)
         ]);
 
+        logger.info(`Fetched events dates: ${events.map(e => e.eventDate).join(', ')}`);
+
         const totalPages = Math.ceil(totalCount / parseInt(limit));
 
         return res.status(200).json({
@@ -166,6 +168,11 @@ const getEventBySlug = async (req, res) => {
     }
 }
 
+function createDateInTimezone(dateString, timezone = 'America/Indiana/Indianapolis') {
+    const date = new Date(dateString + 'T12:00:00');
+    return date;
+}
+
 const createEvent = async (req, res) => {
     try {
         const {
@@ -197,6 +204,8 @@ const createEvent = async (req, res) => {
             });
         }
 
+        const eventTimezone = timezone || 'America/Indiana/Indianapolis';
+
         if (startTime && endTime) {
             const start = new Date(`${eventDate}T${startTime}`);
             const end = new Date(`${eventDate}T${endTime}`);
@@ -222,10 +231,10 @@ const createEvent = async (req, res) => {
             category: category || 'community-service',
             eventType: eventType || 'in-person',
             status: status || 'draft',
-            eventDate,
+            eventDate: createDateInTimezone(eventDate, eventTimezone),
             startTime,
             endTime,
-            timezone: timezone || 'America/Indiana/Indianapolis',
+            timezone: eventTimezone,
             location: location || {},
             registration: registration || { isRequired: false },
             speakers: speakers || [],
@@ -253,7 +262,6 @@ const createEvent = async (req, res) => {
         });
     }
 }
-
 
 const updateEvent = async (req, res) => {
     try {
@@ -289,6 +297,8 @@ const updateEvent = async (req, res) => {
         if (title && title !== existingEvent.title) {
             slug = await SlugGenerator.generateUniqueSlug(title, req.params.id);
         }
+
+        const eventTimezone = timezone || existingEvent.timezone || 'America/Indiana/Indianapolis';
 
         if (eventDate && startTime && endTime) {
             const start = new Date(`${eventDate}T${startTime}`);
@@ -336,7 +346,7 @@ const updateEvent = async (req, res) => {
         if (category !== undefined) updateData.category = category;
         if (eventType !== undefined) updateData.eventType = eventType;
         if (status !== undefined) updateData.status = status;
-        if (eventDate !== undefined) updateData.eventDate = eventDate;
+        if (eventDate !== undefined) updateData.eventDate = createDateInTimezone(eventDate, eventTimezone);
         if (startTime !== undefined) updateData.startTime = startTime;
         if (endTime !== undefined) updateData.endTime = endTime;
         if (timezone !== undefined) updateData.timezone = timezone;
@@ -369,7 +379,6 @@ const updateEvent = async (req, res) => {
         });
     }
 }
-
 
 const deleteEvent = async (req, res) => {
     try {
