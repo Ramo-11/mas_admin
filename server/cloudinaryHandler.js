@@ -27,7 +27,7 @@ const upload = multer({
 // Upload single image to Cloudinary
 const uploadImageToCloudinary = async (fileBuffer, options = {}) => {
     const defaultOptions = {
-        folder: 'events',
+        folder: 'mas',
         transformation: [
             { width: 1200, height: 800, crop: 'limit' },
             { quality: 'auto' },
