@@ -63,8 +63,8 @@ route.get("/api/events/stats", getEventStats)
 route.get("/api/events/upcoming", getUpcomingEvents)
 route.get("/api/events/featured", getFeaturedEvents)
 route.get("/api/events/category/:category", getEventsByCategory)
-route.get("/api/events/:id", getEventById)
 route.get("/api/events/slug/:slug", getEventBySlug)
+route.get("/api/events/:id", getEventById)
 
 // *********** POST requests **********
 route.post("/api/events", createEvent)

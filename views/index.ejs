@@ -1,156 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Management Dashboard</title>
-    <link rel="stylesheet" href="/css/admin-dashboard.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1><i class="fas fa-calendar-check"></i> Event Management Dashboard</h1>
-            <p>Manage your events efficiently</p>
-        </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Event Management Dashboard</title>
+        <link rel="stylesheet" href="/css/admin-dashboard.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        />
+    </head>
+    <body>
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-calendar-check"></i> Event Management Dashboard</h1>
+                <p>Manage your events efficiently</p>
+            </div>
 
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-alt"></i>
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number"><%= stats.total || 0 %></div>
+                        <div class="stat-label">Total Events</div>
+                    </div>
                 </div>
-                <div class="stat-content">
-                    <div class="stat-number"><%= stats.total || 0 %></div>
-                    <div class="stat-label">Total Events</div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number"><%= stats.published || 0 %></div>
+                        <div class="stat-label">Published</div>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-check-circle"></i>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number"><%= stats.upcoming || 0 %></div>
+                        <div class="stat-label">Upcoming</div>
+                    </div>
                 </div>
-                <div class="stat-content">
-                    <div class="stat-number"><%= stats.published || 0 %></div>
-                    <div class="stat-label">Published</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number"><%= stats.upcoming || 0 %></div>
-                    <div class="stat-label">Upcoming</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-edit"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number"><%= stats.draft || 0 %></div>
-                    <div class="stat-label">Drafts</div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-edit"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number"><%= stats.draft || 0 %></div>
+                        <div class="stat-label">Drafts</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Actions Bar -->
-        <div class="actions">
-            <button class="btn btn-primary" id="create-event-btn">
-                <i class="fas fa-plus"></i> Create Event
-            </button>
-            <div class="filters">
-                <input type="text" id="search" placeholder="Search events..." class="search-input">
-                <select id="filter-category" class="filter-select">
-                    <option value="">All Categories</option>
-                    <option value="community-service">Community Service</option>
-                    <option value="educational">Educational</option>
-                    <option value="religious">Religious</option>
-                    <option value="cultural">Cultural</option>
-                    <option value="youth">Youth</option>
-                    <option value="interfaith">Interfaith</option>
-                    <option value="fundraising">Fundraising</option>
-                    <option value="health-wellness">Health & Wellness</option>
-                    <option value="social">Social</option>
-                    <option value="workshop">Workshop</option>
-                    <option value="conference">Conference</option>
-                    <option value="meeting">Meeting</option>
-                    <option value="other">Other</option>
-                </select>
-                <select id="filter-status" class="filter-select">
-                    <option value="">All Status</option>
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="completed">Completed</option>
-                </select>
+            <!-- Actions Bar -->
+            <div class="actions">
+                <button class="btn btn-primary" id="create-event-btn">
+                    <i class="fas fa-plus"></i> Create Event
+                </button>
+                <div class="filters">
+                    <input
+                        type="text"
+                        id="search"
+                        placeholder="Search events..."
+                        class="search-input"
+                    />
+                    <select id="filter-category" class="filter-select">
+                        <option value="">All Categories</option>
+                        <option value="community-service">Community Service</option>
+                        <option value="educational">Educational</option>
+                        <option value="religious">Religious</option>
+                        <option value="cultural">Cultural</option>
+                        <option value="youth">Youth</option>
+                        <option value="interfaith">Interfaith</option>
+                        <option value="fundraising">Fundraising</option>
+                        <option value="health-wellness">Health & Wellness</option>
+                        <option value="social">Social</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="conference">Conference</option>
+                        <option value="meeting">Meeting</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <select id="filter-status" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
             </div>
-        </div>
 
-        <!-- Events Table -->
-        <div class="table-container">
-            <table class="events-table">
-                <thead>
-                    <tr>
-                        <th>Event</th>
-                        <th>Category</th>
-                        <th>Status</th>
-                        <th>Event Date</th>
-                        <th>Type</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="events-table">
-                    <% if (events && events.length > 0) { %>
-                        <% events.forEach(event => { %>
-                            <tr data-id="<%= event._id %>">
-                                <td>
-                                    <div class="event-info">
-                                        <strong><%= event.title %></strong>
-                                        <% if (event.featured) { %>
-                                            <i class="fas fa-star featured"></i>
-                                        <% } %>
-                                        <div class="event-desc"><%= event.shortDescription || event.description.substring(0, 60) + '...' %></div>
+            <!-- Events Table -->
+            <div class="table-container">
+                <table class="events-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="events-table">
+                        <% if (events && events.length > 0) { %> <% events.forEach(event => { %>
+                        <tr data-id="<%= event._id %>">
+                            <td>
+                                <div class="event-info">
+                                    <strong><%= event.title %></strong>
+                                    <% if (event.featured) { %><i
+                                        class="fas fa-star featured"
+                                        title="Featured"
+                                    ></i
+                                    ><% } %> <% if (event.recurring && event.recurring.isRecurring)
+                                    { %><i
+                                        class="fas fa-sync-alt recurring-badge"
+                                        title="Recurring"
+                                    ></i
+                                    ><% } %> <% if (event.registration &&
+                                    event.registration.isRequired) { %><i
+                                        class="fas fa-ticket-alt registration-badge"
+                                        title="Registration Required"
+                                    ></i
+                                    ><% } %>
+                                    <div class="event-desc">
+                                        <%= event.shortDescription || (event.description ?
+                                        event.description.substring(0, 60) + '...' : '') %>
                                     </div>
-                                </td>
-                                <td>
-                                    <span class="badge category-<%= event.category %>">
-                                        <%= event.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge status-<%= event.status %>">
-                                        <%= event.status.charAt(0).toUpperCase() + event.status.slice(1) %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="date-time">
-                                        <%= new Date(event.eventDate).toLocaleDateString('en-US', { timeZone: 'America/Indiana/Indianapolis' }) %>
-                                        <div class="time"><%= event.startTime %></div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge type-<%= event.eventType %>">
-                                        <%= event.eventType.charAt(0).toUpperCase() + event.eventType.slice(1) %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn btn-sm btn-edit" data-id="<%= event._id %>">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-duplicate" data-id="<%= event._id %>">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-delete" data-id="<%= event._id %>">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    <% } else { %>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge category-<%= event.category %>"
+                                    ><%= event.category.split('-').map(word =>
+                                    word.charAt(0).toUpperCase() + word.slice(1)).join(' ') %></span
+                                >
+                            </td>
+                            <td>
+                                <span class="badge status-<%= event.status %>"
+                                    ><%= event.status.charAt(0).toUpperCase() +
+                                    event.status.slice(1) %></span
+                                >
+                            </td>
+                            <td>
+                                <div class="date-time">
+                                    <%= new Date(event.eventDate).toLocaleDateString('en-US', {
+                                    timeZone: 'America/Indiana/Indianapolis' }) %>
+                                    <div class="time"><%= event.startTime || '' %></div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge type-<%= event.eventType %>"
+                                    ><%= event.eventType.split('-').map(w =>
+                                    w.charAt(0).toUpperCase() + w.slice(1)).join('-') %></span
+                                >
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button
+                                        class="btn btn-sm btn-edit"
+                                        data-id="<%= event._id %>"
+                                        title="Edit"
+                                    >
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button
+                                        class="btn btn-sm btn-duplicate"
+                                        data-id="<%= event._id %>"
+                                        title="Duplicate"
+                                    >
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                    <button
+                                        class="btn btn-sm btn-delete"
+                                        data-id="<%= event._id %>"
+                                        title="Delete"
+                                    >
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }); %> <% } else { %>
                         <tr>
                             <td colspan="6" class="empty-state">
                                 <div class="empty-content">
@@ -160,321 +189,854 @@
                                 </div>
                             </td>
                         </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Event Modal -->
-    <div class="modal" id="event-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-title">Create Event</h2>
-                <button class="close" id="close-modal">&times;</button>
+                        <% } %>
+                    </tbody>
+                </table>
             </div>
-            <form id="event-form">
-                <!-- Basic Information -->
-                <div class="form-section">
-                    <h3>Basic Information</h3>
-                    
-                    <div class="form-group">
-                        <label for="title">Event Title *</label>
-                        <input type="text" id="title" name="title" required maxlength="200">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="shortDescription">Short Description</label>
-                        <textarea id="shortDescription" name="shortDescription" rows="2" maxlength="300" placeholder="Brief summary for previews and listings"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="description">Full Description *</label>
-                        <textarea id="description" name="description" required rows="4" maxlength="2000"></textarea>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="category">Category *</label>
-                            <select id="category" name="category" required>
-                                <option value="community-service">Community Service</option>
-                                <option value="educational">Educational</option>
-                                <option value="religious">Religious</option>
-                                <option value="cultural">Cultural</option>
-                                <option value="youth">Youth</option>
-                                <option value="interfaith">Interfaith</option>
-                                <option value="fundraising">Fundraising</option>
-                                <option value="health-wellness">Health & Wellness</option>
-                                <option value="social">Social</option>
-                                <option value="workshop">Workshop</option>
-                                <option value="conference">Conference</option>
-                                <option value="meeting">Meeting</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="eventType">Event Type *</label>
-                            <select id="eventType" name="eventType" required>
-                                <option value="in-person">In-Person</option>
-                                <option value="virtual">Virtual</option>
-                                <option value="hybrid">Hybrid</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tags">Tags</label>
-                        <input type="text" id="tags" name="tags" placeholder="Separate tags with commas">
-                        <small>Enter keywords separated by commas (e.g., fundraising, community, charity)</small>
-                    </div>
+        </div>
+
+        <!-- Event Modal -->
+        <div class="modal" id="event-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Create Event</h2>
+                    <button class="close" id="close-modal">&times;</button>
                 </div>
 
-                <!-- Date & Time -->
-                <div class="form-section">
-                    <h3>Date & Time</h3>
-                    
-                    <div class="form-group">
-                        <label for="eventDate">Event Date *</label>
-                        <input type="date" id="eventDate" name="eventDate" required>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="startTime">Start Time</label>
-                            <input type="time" id="startTime" name="startTime">
+                <form id="event-form">
+                    <!-- Event Type Selector -->
+                    <div class="event-type-selector">
+                        <p class="selector-label">What kind of event is this?</p>
+                        <div class="event-type-cards">
+                            <label class="event-type-card selected" data-type="single">
+                                <input
+                                    type="radio"
+                                    name="eventScheduleType"
+                                    value="single"
+                                    checked
+                                />
+                                <div class="card-icon"><i class="fas fa-calendar-day"></i></div>
+                                <div class="card-content">
+                                    <strong>One-Time Event</strong>
+                                    <span>Single event on a specific date</span>
+                                </div>
+                            </label>
+                            <label class="event-type-card" data-type="recurring">
+                                <input type="radio" name="eventScheduleType" value="recurring" />
+                                <div class="card-icon"><i class="fas fa-sync-alt"></i></div>
+                                <div class="card-content">
+                                    <strong>Recurring Program</strong>
+                                    <span>Classes, meetings, or weekly programs</span>
+                                </div>
+                            </label>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="endTime">End Time</label>
-                            <input type="time" id="endTime" name="endTime">
-                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="timezone">Timezone</label>
-                        <select id="timezone" name="timezone">
-                            <option value="America/Indiana/Indianapolis">America/Indiana/Indianapolis (EST/EDT)</option>
-                            <option value="America/New_York">America/New_York (EST/EDT)</option>
-                            <option value="America/Chicago">America/Chicago (CST/CDT)</option>
-                            <option value="America/Denver">America/Denver (MST/MDT)</option>
-                            <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
-                        </select>
-                    </div>
-                </div>
 
-                <!-- Location -->
-                <div class="form-section">
-                    <h3>Location</h3>
-                    
-                    <div class="form-group">
-                        <label for="venue">Venue Name</label>
-                        <input type="text" id="venue" name="venue">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="street">Street Address</label>
-                        <input type="text" id="street" name="street">
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="city">City</label>
-                            <input type="text" id="city" name="city">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="state">State</label>
-                            <input type="text" id="state" name="state">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="zipCode">ZIP Code</label>
-                            <input type="text" id="zipCode" name="zipCode">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="virtualLink">Virtual Link</label>
-                        <input type="url" id="virtualLink" name="virtualLink" placeholder="https://zoom.us/j/123456789">
-                        <small>For virtual or hybrid events</small>
-                    </div>
-                </div>
+                    <!-- Accordion Sections -->
+                    <div class="accordion-container">
+                        <!-- Basic Info -->
+                        <div class="accordion-section open" data-section="basic">
+                            <div class="accordion-header">
+                                <div class="accordion-title">
+                                    <i class="fas fa-info-circle"></i>
+                                    Basic Information
+                                    <span class="section-badge required">Required</span>
+                                </div>
+                                <i class="fas fa-chevron-down accordion-icon"></i>
+                            </div>
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label for="title">Event Title *</label>
+                                    <input
+                                        type="text"
+                                        id="title"
+                                        name="title"
+                                        required
+                                        maxlength="200"
+                                        placeholder="Enter a clear, descriptive title"
+                                    />
+                                </div>
 
-                <!-- Speakers -->
-                <div class="form-section">
-                    <h3>Speakers</h3>
-                    <div id="speakers-container">
-                        <div class="speaker-item">
-                            <div class="form-row">
                                 <div class="form-group">
-                                    <label>Speaker Name</label>
-                                    <input type="text" name="speaker-name-0" placeholder="Full name">
+                                    <label for="shortDescription"
+                                        >Short Description
+                                        <span class="label-hint">(shown in listings)</span></label
+                                    >
+                                    <textarea
+                                        id="shortDescription"
+                                        name="shortDescription"
+                                        rows="2"
+                                        maxlength="300"
+                                        placeholder="Brief summary for event listings"
+                                    ></textarea>
+                                    <div class="field-footer">
+                                        <span class="char-count"
+                                            ><span id="shortDescCount">0</span>/300</span
+                                        >
+                                    </div>
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label>Title</label>
-                                    <input type="text" name="speaker-title-0" placeholder="Job title or role">
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Organization</label>
-                                    <input type="text" name="speaker-organization-0" placeholder="Company or organization">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Photo URL</label>
-                                    <input type="url" name="speaker-photo-0" placeholder="https://example.com/photo.jpg">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Bio</label>
-                                <textarea name="speaker-bio-0" rows="2" placeholder="Brief biography"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" id="add-speaker" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-plus"></i> Add Another Speaker
-                    </button>
-                </div>
 
-                <!-- Event Images -->
-                <div class="form-section">
-                    <h3>Event Images</h3>
-                    
-                    <!-- Featured Image (Event Flyer) -->
-                    <div class="form-group">
-                        <label>Featured Image (Event Flyer)</label>
-                        <div class="featured-image-container">
-                            <div class="featured-image-upload" id="featuredImageUpload">
-                                <div class="featured-upload-area" id="featuredDropzone">
-                                    <i class="fas fa-image"></i>
-                                    <p>Upload event flyer</p>
-                                    <input type="file" id="featuredImageInput" accept="image/*">
-                                    <button type="button" class="btn btn-secondary btn-sm">
-                                        Choose Flyer
-                                    </button>
+                                <div class="form-group">
+                                    <label for="description">Full Description *</label>
+                                    <textarea
+                                        id="description"
+                                        name="description"
+                                        required
+                                        rows="4"
+                                        maxlength="2000"
+                                        placeholder="Detailed description of the event"
+                                    ></textarea>
+                                    <div class="field-footer">
+                                        <span class="char-count"
+                                            ><span id="descCount">0</span>/2000</span
+                                        >
+                                    </div>
                                 </div>
-                                <div class="featured-image-preview" id="featuredImagePreview"></div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="category">Category *</label>
+                                        <select id="category" name="category" required>
+                                            <option value="community-service">
+                                                Community Service
+                                            </option>
+                                            <option value="educational">Educational</option>
+                                            <option value="religious">Religious</option>
+                                            <option value="cultural">Cultural</option>
+                                            <option value="youth">Youth</option>
+                                            <option value="interfaith">Interfaith</option>
+                                            <option value="fundraising">Fundraising</option>
+                                            <option value="health-wellness">
+                                                Health & Wellness
+                                            </option>
+                                            <option value="social">Social</option>
+                                            <option value="workshop">Workshop</option>
+                                            <option value="conference">Conference</option>
+                                            <option value="meeting">Meeting</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eventType">Format *</label>
+                                        <select id="eventType" name="eventType" required>
+                                            <option value="in-person">In-Person</option>
+                                            <option value="virtual">Virtual</option>
+                                            <option value="hybrid">Hybrid</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Gallery Images -->
-                    <div class="form-group">
-                        <label>Gallery Images</label>
-                        <div class="image-upload-container">
-                            <div class="image-upload-dropzone" id="imageDropzone">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Drag and drop images here or click to select</p>
-                                <input type="file" id="imageUpload" multiple accept="image/*">
-                                <button type="button" class="btn btn-secondary">
-                                    Choose Images
+
+                        <!-- Schedule -->
+                        <div class="accordion-section open" data-section="schedule">
+                            <div class="accordion-header">
+                                <div class="accordion-title">
+                                    <i class="fas fa-clock"></i>
+                                    Schedule
+                                    <span class="section-badge required">Required</span>
+                                </div>
+                                <i class="fas fa-chevron-down accordion-icon"></i>
+                            </div>
+                            <div class="accordion-body">
+                                <!-- Single Event Schedule -->
+                                <div id="single-event-schedule">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="eventDate">Event Date *</label>
+                                            <input type="date" id="eventDate" name="eventDate" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="timezone">Timezone</label>
+                                            <select id="timezone" name="timezone">
+                                                <option value="America/Indiana/Indianapolis">
+                                                    Indianapolis (EST)
+                                                </option>
+                                                <option value="America/New_York">
+                                                    New York (EST)
+                                                </option>
+                                                <option value="America/Chicago">
+                                                    Chicago (CST)
+                                                </option>
+                                                <option value="America/Denver">Denver (MST)</option>
+                                                <option value="America/Los_Angeles">
+                                                    Los Angeles (PST)
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="startTime">Start Time</label>
+                                            <input type="time" id="startTime" name="startTime" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="endTime">End Time</label>
+                                            <input type="time" id="endTime" name="endTime" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Recurring Event Schedule -->
+                                <div id="recurring-event-schedule" style="display: none">
+                                    <div class="form-group">
+                                        <label>How often does this repeat? *</label>
+                                        <div class="pill-selector" id="frequency-selector">
+                                            <label class="pill selected"
+                                                ><input
+                                                    type="radio"
+                                                    name="frequency"
+                                                    value="weekly"
+                                                    checked
+                                                />Weekly</label
+                                            >
+                                            <label class="pill"
+                                                ><input
+                                                    type="radio"
+                                                    name="frequency"
+                                                    value="biweekly"
+                                                />Every 2 Weeks</label
+                                            >
+                                            <label class="pill"
+                                                ><input
+                                                    type="radio"
+                                                    name="frequency"
+                                                    value="monthly"
+                                                />Monthly</label
+                                            >
+                                            <label class="pill"
+                                                ><input
+                                                    type="radio"
+                                                    name="frequency"
+                                                    value="daily"
+                                                />Daily</label
+                                            >
+                                            <label class="pill"
+                                                ><input
+                                                    type="radio"
+                                                    name="frequency"
+                                                    value="custom"
+                                                />Custom Dates</label
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" id="days-of-week-group">
+                                        <label>Which days? *</label>
+                                        <div class="day-selector">
+                                            <label class="day-pill"
+                                                ><input
+                                                    type="checkbox"
+                                                    name="daysOfWeek"
+                                                    value="0"
+                                                /><span>S</span></label
+                                            >
+                                            <label class="day-pill"
+                                                ><input
+                                                    type="checkbox"
+                                                    name="daysOfWeek"
+                                                    value="1"
+                                                /><span>M</span></label
+                                            >
+                                            <label class="day-pill"
+                                                ><input
+                                                    type="checkbox"
+                                                    name="daysOfWeek"
+                                                    value="2"
+                                                /><span>T</span></label
+                                            >
+                                            <label class="day-pill"
+                                                ><input
+                                                    type="checkbox"
+                                                    name="daysOfWeek"
+                                                    value="3"
+                                                /><span>W</span></label
+                                            >
+                                            <label class="day-pill"
+                                                ><input
+                                                    type="checkbox"
+                                                    name="daysOfWeek"
+                                                    value="4"
+                                                /><span>T</span></label
+                                            >
+                                            <label class="day-pill"
+                                                ><input
+                                                    type="checkbox"
+                                                    name="daysOfWeek"
+                                                    value="5"
+                                                /><span>F</span></label
+                                            >
+                                            <label class="day-pill"
+                                                ><input
+                                                    type="checkbox"
+                                                    name="daysOfWeek"
+                                                    value="6"
+                                                /><span>S</span></label
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="form-group"
+                                        id="monthly-type-group"
+                                        style="display: none"
+                                    >
+                                        <label>Monthly repeat type</label>
+                                        <div class="radio-group">
+                                            <label class="radio-option">
+                                                <input
+                                                    type="radio"
+                                                    name="monthlyType"
+                                                    value="date"
+                                                    checked
+                                                />
+                                                <span
+                                                    >Same date each month
+                                                    <em>(e.g., the 15th)</em></span
+                                                >
+                                            </label>
+                                            <label class="radio-option">
+                                                <input
+                                                    type="radio"
+                                                    name="monthlyType"
+                                                    value="day"
+                                                />
+                                                <span
+                                                    >Same day each month
+                                                    <em>(e.g., 2nd Tuesday)</em></span
+                                                >
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Custom Dates Group -->
+                                    <div class="form-group" id="custom-dates-group" style="display: none">
+                                        <label>Select specific dates *</label>
+                                        <div class="custom-dates-container">
+                                            <div class="custom-date-input-row">
+                                                <input type="date" id="customDateInput" />
+                                                <button type="button" id="add-custom-date" class="btn btn-sm btn-secondary">
+                                                    <i class="fas fa-plus"></i> Add Date
+                                                </button>
+                                            </div>
+                                            <div id="custom-dates-list" class="custom-dates-list"></div>
+                                        </div>
+                                        <small>Add each date the event will occur</small>
+                                    </div>
+
+                                    <div class="form-row" id="recurring-date-range-group">
+                                        <div class="form-group">
+                                            <label for="recurringStartDate"
+                                                >Program Start Date *</label
+                                            >
+                                            <input
+                                                type="date"
+                                                id="recurringStartDate"
+                                                name="recurringStartDate"
+                                            />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="recurringEndDate">Program End Date</label>
+                                            <input
+                                                type="date"
+                                                id="recurringEndDate"
+                                                name="recurringEndDate"
+                                            />
+                                            <small>Leave empty for ongoing programs</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="recurringStartTime">Start Time</label>
+                                            <input
+                                                type="time"
+                                                id="recurringStartTime"
+                                                name="recurringStartTime"
+                                            />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="recurringEndTime">End Time</label>
+                                            <input
+                                                type="time"
+                                                id="recurringEndTime"
+                                                name="recurringEndTime"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="timezoneRecurring">Timezone</label>
+                                        <select id="timezoneRecurring" name="timezoneRecurring">
+                                            <option value="America/Indiana/Indianapolis">
+                                                Indianapolis (EST)
+                                            </option>
+                                            <option value="America/New_York">New York (EST)</option>
+                                            <option value="America/Chicago">Chicago (CST)</option>
+                                            <option value="America/Denver">Denver (MST)</option>
+                                            <option value="America/Los_Angeles">
+                                                Los Angeles (PST)
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="accordion-section" data-section="location">
+                            <div class="accordion-header">
+                                <div class="accordion-title">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Location
+                                    <span class="section-badge optional">Optional</span>
+                                </div>
+                                <i class="fas fa-chevron-down accordion-icon"></i>
+                            </div>
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label for="venue">Venue Name</label>
+                                    <input
+                                        type="text"
+                                        id="venue"
+                                        name="venue"
+                                        placeholder="e.g., Community Center Main Hall"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label for="street">Street Address</label>
+                                    <input
+                                        type="text"
+                                        id="street"
+                                        name="street"
+                                        placeholder="123 Main Street"
+                                    />
+                                </div>
+                                <div class="form-row form-row-3">
+                                    <div class="form-group">
+                                        <label for="city">City</label>
+                                        <input type="text" id="city" name="city" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="state">State</label>
+                                        <input type="text" id="state" name="state" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="zipCode">ZIP</label>
+                                        <input type="text" id="zipCode" name="zipCode" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="virtualLink">Virtual Meeting Link</label>
+                                    <input
+                                        type="url"
+                                        id="virtualLink"
+                                        name="virtualLink"
+                                        placeholder="https://zoom.us/j/..."
+                                    />
+                                    <small>For virtual or hybrid events</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Registration -->
+                        <div class="accordion-section" data-section="registration">
+                            <div class="accordion-header">
+                                <div class="accordion-title">
+                                    <i class="fas fa-user-plus"></i>
+                                    Registration
+                                    <span class="section-badge optional">Optional</span>
+                                </div>
+                                <i class="fas fa-chevron-down accordion-icon"></i>
+                            </div>
+                            <div class="accordion-body">
+                                <div class="toggle-row">
+                                    <label class="toggle-switch">
+                                        <input
+                                            type="checkbox"
+                                            id="isRegistrationRequired"
+                                            name="isRegistrationRequired"
+                                        />
+                                        <span class="slider"></span>
+                                    </label>
+                                    <div class="toggle-content">
+                                        <strong>Require Registration</strong>
+                                        <span>Attendees must sign up before the event</span>
+                                    </div>
+                                </div>
+
+                                <div id="registration-details" style="display: none">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="maxAttendees">Max Attendees</label>
+                                            <input
+                                                type="number"
+                                                id="maxAttendees"
+                                                name="maxAttendees"
+                                                min="1"
+                                                placeholder="Unlimited"
+                                            />
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="registrationFee">Fee ($)</label>
+                                            <input
+                                                type="number"
+                                                id="registrationFee"
+                                                name="registrationFee"
+                                                min="0"
+                                                step="0.01"
+                                                placeholder="0 = Free"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="registrationDeadline"
+                                                >Registration Deadline</label
+                                            >
+                                            <input
+                                                type="date"
+                                                id="registrationDeadline"
+                                                name="registrationDeadline"
+                                            />
+                                        </div>
+                                        <div class="form-group toggle-inline">
+                                            <label class="toggle-switch small">
+                                                <input
+                                                    type="checkbox"
+                                                    id="waitlistEnabled"
+                                                    name="waitlistEnabled"
+                                                />
+                                                <span class="slider"></span>
+                                            </label>
+                                            <span>Enable waitlist</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Form Builder -->
+                                    <div class="form-builder">
+                                        <div class="form-builder-header">
+                                            <div>
+                                                <strong>Registration Form</strong>
+                                                <span class="hint"
+                                                    >Customize what info you collect</span
+                                                >
+                                            </div>
+                                            <button
+                                                type="button"
+                                                id="add-registration-field"
+                                                class="btn btn-sm btn-secondary"
+                                            >
+                                                <i class="fas fa-plus"></i> Add Field
+                                            </button>
+                                        </div>
+
+                                        <div class="default-fields">
+                                            <div class="default-field">
+                                                <i class="fas fa-user"></i> Full Name
+                                                <span class="req">Required</span>
+                                            </div>
+                                            <div class="default-field">
+                                                <i class="fas fa-envelope"></i> Email
+                                                <span class="req">Required</span>
+                                            </div>
+                                            <div class="default-field">
+                                                <i class="fas fa-phone"></i> Phone
+                                                <span class="opt">Optional</span>
+                                            </div>
+                                        </div>
+
+                                        <div id="registration-fields-container"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Media -->
+                        <div class="accordion-section" data-section="media">
+                            <div class="accordion-header">
+                                <div class="accordion-title">
+                                    <i class="fas fa-images"></i>
+                                    Images & Media
+                                    <span class="section-badge optional">Optional</span>
+                                </div>
+                                <i class="fas fa-chevron-down accordion-icon"></i>
+                            </div>
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label>Event Flyer</label>
+                                    <div class="upload-zone" id="featuredDropzone">
+                                        <input
+                                            type="file"
+                                            id="featuredImageInput"
+                                            accept="image/*"
+                                            hidden
+                                        />
+                                        <i class="fas fa-image"></i>
+                                        <p>Drop image here or <span class="link">browse</span></p>
+                                    </div>
+                                    <div id="featuredImagePreview" class="image-preview"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Gallery Images</label>
+                                    <div class="upload-zone" id="imageDropzone">
+                                        <input
+                                            type="file"
+                                            id="imageUpload"
+                                            multiple
+                                            accept="image/*"
+                                            hidden
+                                        />
+                                        <i class="fas fa-images"></i>
+                                        <p>Drop images here or <span class="link">browse</span></p>
+                                    </div>
+                                    <div
+                                        id="imagePreviewContainer"
+                                        class="image-gallery-preview"
+                                    ></div>
+                                    <div
+                                        class="upload-progress"
+                                        id="uploadProgress"
+                                        style="display: none"
+                                    >
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="progressFill"></div>
+                                        </div>
+                                        <span id="progressText">Uploading...</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="videoUrl">Video URL</label>
+                                        <input
+                                            type="url"
+                                            id="videoUrl"
+                                            name="videoUrl"
+                                            placeholder="YouTube or Vimeo link"
+                                        />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="videoTitle">Video Title</label>
+                                        <input type="text" id="videoTitle" name="videoTitle" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Speakers -->
+                        <div class="accordion-section" data-section="speakers">
+                            <div class="accordion-header">
+                                <div class="accordion-title">
+                                    <i class="fas fa-microphone"></i>
+                                    Speakers
+                                    <span class="section-badge optional">Optional</span>
+                                </div>
+                                <i class="fas fa-chevron-down accordion-icon"></i>
+                            </div>
+                            <div class="accordion-body">
+                                <div id="speakers-container"></div>
+                                <button
+                                    type="button"
+                                    id="add-speaker"
+                                    class="btn btn-sm btn-secondary"
+                                >
+                                    <i class="fas fa-plus"></i> Add Speaker
                                 </button>
                             </div>
-                            <div class="image-preview-container" id="imagePreviewContainer"></div>
-                            <div class="upload-progress" id="uploadProgress">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" id="progressFill"></div>
+                        </div>
+
+                        <!-- Tags & Settings -->
+                        <div class="accordion-section" data-section="settings">
+                            <div class="accordion-header">
+                                <div class="accordion-title">
+                                    <i class="fas fa-cog"></i>
+                                    Tags & Settings
+                                    <span class="section-badge optional">Optional</span>
                                 </div>
-                                <span class="progress-text" id="progressText">Uploading...</span>
+                                <i class="fas fa-chevron-down accordion-icon"></i>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="videoUrl">Video URL</label>
-                        <input type="url" id="videoUrl" name="videoUrl" placeholder="https://youtube.com/watch?v=...">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="videoTitle">Video Title</label>
-                        <input type="text" id="videoTitle" name="videoTitle" placeholder="Video title">
-                    </div>
-                </div>
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label for="tags">Tags</label>
+                                    <input
+                                        type="text"
+                                        id="tags"
+                                        name="tags"
+                                        placeholder="e.g., fundraising, community, youth"
+                                    />
+                                    <small
+                                        >Separate with commas. Helps users find your event.</small
+                                    >
+                                </div>
 
-                <!-- Registration -->
-                <div class="form-section">
-                    <h3>Registration</h3>
-                    
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="isRegistrationRequired" name="isRegistrationRequired">
-                            Registration Required
-                        </label>
-                    </div>
-                    
-                    <div id="registration-details">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="maxAttendees">Max Attendees</label>
-                                <input type="number" id="maxAttendees" name="maxAttendees" min="1">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="registrationFee">Registration Fee ($)</label>
-                                <input type="number" id="registrationFee" name="registrationFee" min="0" step="0.01">
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="registrationDeadline">Registration Deadline</label>
-                            <input type="date" id="registrationDeadline" name="registrationDeadline">
-                        </div>
-                    </div>
-                </div>
+                                <div class="form-group">
+                                    <label>Status *</label>
+                                    <div class="status-cards">
+                                        <label class="status-card selected">
+                                            <input
+                                                type="radio"
+                                                name="status"
+                                                value="draft"
+                                                checked
+                                            />
+                                            <i class="fas fa-pencil-alt"></i>
+                                            <strong>Draft</strong>
+                                            <span>Only you can see</span>
+                                        </label>
+                                        <label class="status-card">
+                                            <input type="radio" name="status" value="published" />
+                                            <i class="fas fa-globe"></i>
+                                            <strong>Published</strong>
+                                            <span>Visible to all</span>
+                                        </label>
+                                    </div>
+                                </div>
 
-                <!-- Settings -->
-                <div class="form-section">
-                    <h3>Event Settings</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="status">Status *</label>
-                            <select id="status" name="status" required>
-                                <option value="draft">Draft</option>
-                                <option value="published">Published</option>
-                                <option value="cancelled">Cancelled</option>
-                                <option value="completed">Completed</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="featured" name="featured">
-                                Featured Event
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="isPublic" name="isPublic" checked>
-                                Public Event
-                            </label>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="isRecurring" name="isRecurring">
-                                Recurring Event
-                            </label>
+                                <div class="toggle-group">
+                                    <div class="toggle-row compact">
+                                        <label class="toggle-switch small">
+                                            <input type="checkbox" id="featured" name="featured" />
+                                            <span class="slider"></span>
+                                        </label>
+                                        <div class="toggle-content">
+                                            <strong>Featured</strong>
+                                            <span>Highlight on homepage</span>
+                                        </div>
+                                    </div>
+                                    <div class="toggle-row compact">
+                                        <label class="toggle-switch small">
+                                            <input
+                                                type="checkbox"
+                                                id="isPublic"
+                                                name="isPublic"
+                                                checked
+                                            />
+                                            <span class="slider"></span>
+                                        </label>
+                                        <div class="toggle-content">
+                                            <strong>Public</strong>
+                                            <span>Visible to non-members</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="save-btn">Save Event</button>
-                </div>
-            </form>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancel-btn">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="save-btn">
+                            <i class="fas fa-save"></i> Save Event
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <script src="/js/admin-dashboard.js"></script>
-</body>
+        <!-- Add Field Modal -->
+        <div class="modal modal-sm" id="field-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add Registration Field</h2>
+                    <button class="close" id="close-field-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="newFieldLabel">Field Label *</label>
+                        <input
+                            type="text"
+                            id="newFieldLabel"
+                            placeholder="e.g., Dietary Restrictions"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Field Type *</label>
+                        <div class="field-type-grid">
+                            <label class="field-type-card selected">
+                                <input type="radio" name="newFieldType" value="text" checked />
+                                <i class="fas fa-font"></i>
+                                <strong>Short Text</strong>
+                                <span>Single line</span>
+                            </label>
+                            <label class="field-type-card">
+                                <input type="radio" name="newFieldType" value="textarea" />
+                                <i class="fas fa-align-left"></i>
+                                <strong>Long Text</strong>
+                                <span>Multiple lines</span>
+                            </label>
+                            <label class="field-type-card">
+                                <input type="radio" name="newFieldType" value="select" />
+                                <i class="fas fa-caret-square-down"></i>
+                                <strong>Dropdown</strong>
+                                <span>Select one</span>
+                            </label>
+                            <label class="field-type-card">
+                                <input type="radio" name="newFieldType" value="radio" />
+                                <i class="fas fa-dot-circle"></i>
+                                <strong>Single Choice</strong>
+                                <span>Pick one</span>
+                            </label>
+                            <label class="field-type-card">
+                                <input type="radio" name="newFieldType" value="checkbox" />
+                                <i class="fas fa-check-square"></i>
+                                <strong>Multiple Choice</strong>
+                                <span>Pick several</span>
+                            </label>
+                            <label class="field-type-card">
+                                <input type="radio" name="newFieldType" value="number" />
+                                <i class="fas fa-hashtag"></i>
+                                <strong>Number</strong>
+                                <span>Numeric only</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="fieldOptionsGroup" style="display: none">
+                        <label for="newFieldOptions"
+                            >Options * <span class="label-hint">(one per line)</span></label
+                        >
+                        <textarea
+                            id="newFieldOptions"
+                            rows="4"
+                            placeholder="Option 1&#10;Option 2&#10;Option 3"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newFieldPlaceholder"
+                            >Placeholder <span class="label-hint">(hint text)</span></label
+                        >
+                        <input
+                            type="text"
+                            id="newFieldPlaceholder"
+                            placeholder="e.g., Enter your response"
+                        />
+                    </div>
+
+                    <div class="toggle-row compact">
+                        <label class="toggle-switch small">
+                            <input type="checkbox" id="newFieldRequired" />
+                            <span class="slider"></span>
+                        </label>
+                        <span>Required field</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-field-btn">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="save-field-btn">
+                        <i class="fas fa-plus"></i> Add Field
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/js/admin-dashboard.js"></script>
+    </body>
 </html>

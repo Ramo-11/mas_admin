@@ -2,484 +2,740 @@ class EventManager {
     constructor() {
         this.currentEditId = null;
         this.events = [];
-        this.speakerCount = 1;
+        this.speakerCount = 0;
         this.uploadedImages = [];
         this.featuredImage = null;
+        this.registrationFields = [];
+        this.customDates = [];
         this.init();
     }
 
     init() {
         this.bindEvents();
         this.loadEvents();
-        this.initializeSpeakers();
-        this.initializeRegistrationToggle();
-        this.initializeImageUpload();
-        this.initializeFeaturedImageUpload();
+        this.initAccordions();
+        this.initEventTypeSelector();
+        this.initFrequencySelector();
+        this.initDaySelector();
+        this.initStatusSelector();
+        this.initRegistrationToggle();
+        this.initImageUploads();
+        this.initCharCounters();
+        this.initFieldModal();
+        this.initCustomDates();
     }
 
-    initializeFeaturedImageUpload() {
-        const dropzone = document.getElementById('featuredDropzone');
-        const fileInput = document.getElementById('featuredImageInput');
-        const button = dropzone.querySelector('.btn');
-        const preview = document.getElementById('featuredImagePreview');
-
-        // Drag and drop events
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropzone.classList.add('dragover');
-        });
-
-        dropzone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-            if (files.length > 0) {
-                this.handleFeaturedImageFile(files[0]); // Only take the first file
-            }
-        });
-
-        // File input change
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                this.handleFeaturedImageFile(file);
-            }
-        });
-
-        // Button click to open file dialog
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            fileInput.click();
-        });
-
-        // Dropzone click (but not on button)
-        dropzone.addEventListener('click', (e) => {
-            if (e.target === dropzone || e.target === dropzone.querySelector('i') || e.target === dropzone.querySelector('p')) {
-                fileInput.click();
-            }
+    // ========================================
+    // Accordion
+    // ========================================
+    initAccordions() {
+        document.querySelectorAll('.accordion-header').forEach((header) => {
+            header.addEventListener('click', () => {
+                const section = header.parentElement;
+                section.classList.toggle('open');
+            });
         });
     }
 
-    async handleFeaturedImageFile(file) {
-        try {
-            const imageUrl = await this.uploadImageToCloudinary(file);
-            this.featuredImage = {
-                url: imageUrl,
-                alt: file.name
-            };
-            this.displayFeaturedImagePreview();
-        } catch (error) {
-            console.error('Error uploading featured image:', error);
-            this.showNotification(`Failed to upload ${file.name}`, 'error');
+    // ========================================
+    // Event Type Selector (Single vs Recurring)
+    // ========================================
+    initEventTypeSelector() {
+        const cards = document.querySelectorAll('.event-type-card');
+        const singleSchedule = document.getElementById('single-event-schedule');
+        const recurringSchedule = document.getElementById('recurring-event-schedule');
+
+        cards.forEach((card) => {
+            card.addEventListener('click', () => {
+                cards.forEach((c) => c.classList.remove('selected'));
+                card.classList.add('selected');
+
+                const type = card.dataset.type;
+                if (type === 'single') {
+                    singleSchedule.style.display = 'block';
+                    recurringSchedule.style.display = 'none';
+                    document.getElementById('eventDate').required = true;
+                } else {
+                    singleSchedule.style.display = 'none';
+                    recurringSchedule.style.display = 'block';
+                    document.getElementById('eventDate').required = false;
+                }
+            });
+        });
+    }
+
+    // ========================================
+    // Frequency Selector
+    // ========================================
+    initFrequencySelector() {
+        const pills = document.querySelectorAll('#frequency-selector .pill');
+        const daysGroup = document.getElementById('days-of-week-group');
+        const monthlyGroup = document.getElementById('monthly-type-group');
+        const customDatesGroup = document.getElementById('custom-dates-group');
+        const dateRangeGroup = document.getElementById('recurring-date-range-group');
+
+        pills.forEach((pill) => {
+            pill.addEventListener('click', () => {
+                pills.forEach((p) => p.classList.remove('selected'));
+                pill.classList.add('selected');
+
+                const freq = pill.querySelector('input').value;
+
+                // Show/hide days of week based on frequency
+                if (freq === 'daily' || freq === 'custom') {
+                    daysGroup.style.display = 'none';
+                } else {
+                    daysGroup.style.display = 'block';
+                }
+
+                // Show monthly options only for monthly
+                if (freq === 'monthly') {
+                    monthlyGroup.style.display = 'block';
+                } else {
+                    monthlyGroup.style.display = 'none';
+                }
+
+                // Show custom dates picker only for custom
+                if (freq === 'custom') {
+                    customDatesGroup.style.display = 'block';
+                    if (dateRangeGroup) dateRangeGroup.style.display = 'none';
+                } else {
+                    customDatesGroup.style.display = 'none';
+                    if (dateRangeGroup) dateRangeGroup.style.display = 'flex';
+                }
+            });
+        });
+    }
+
+    // ========================================
+    // Day Selector
+    // ========================================
+    initDaySelector() {
+        const dayPills = document.querySelectorAll('.day-pill');
+        dayPills.forEach((pill) => {
+            pill.addEventListener('click', (e) => {
+                e.preventDefault();
+                pill.classList.toggle('selected');
+                const checkbox = pill.querySelector('input');
+                checkbox.checked = pill.classList.contains('selected');
+            });
+        });
+    }
+
+    // ========================================
+    // Custom Dates
+    // ========================================
+    initCustomDates() {
+        const addBtn = document.getElementById('add-custom-date');
+        const input = document.getElementById('customDateInput');
+
+        if (addBtn && input) {
+            addBtn.addEventListener('click', () => {
+                if (input.value) {
+                    this.addCustomDate(input.value);
+                    input.value = '';
+                }
+            });
+
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (input.value) {
+                        this.addCustomDate(input.value);
+                        input.value = '';
+                    }
+                }
+            });
         }
-        
-        // Reset file input
-        document.getElementById('featuredImageInput').value = '';
+
+        // Delegation for remove buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.custom-date-remove')) {
+                const chip = e.target.closest('.custom-date-chip');
+                const date = chip.dataset.date;
+                this.removeCustomDate(date);
+            }
+        });
     }
 
-    displayFeaturedImagePreview() {
-        const preview = document.getElementById('featuredImagePreview');
-        const uploadArea = document.getElementById('featuredDropzone');
-        
-        if (this.featuredImage) {
-            preview.innerHTML = `
-                <div class="featured-preview-item">
-                    <img src="${this.featuredImage.url}" alt="${this.featuredImage.alt}" loading="lazy">
-                    <button type="button" class="featured-preview-remove" onclick="eventManager.removeFeaturedImage()">
+    addCustomDate(dateStr) {
+        if (this.customDates.includes(dateStr)) {
+            this.showNotification('This date is already added', 'warning');
+            return;
+        }
+        this.customDates.push(dateStr);
+        this.customDates.sort();
+        this.renderCustomDates();
+    }
+
+    removeCustomDate(dateStr) {
+        this.customDates = this.customDates.filter(d => d !== dateStr);
+        this.renderCustomDates();
+    }
+
+    renderCustomDates() {
+        const container = document.getElementById('custom-dates-list');
+        if (!container) return;
+
+        container.innerHTML = this.customDates.map(dateStr => {
+            const formatted = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+            return `
+                <div class="custom-date-chip" data-date="${dateStr}">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>${formatted}</span>
+                    <button type="button" class="custom-date-remove" title="Remove">
                         <i class="fas fa-times"></i>
                     </button>
-                    <div class="featured-preview-info">
-                        <small>Event Flyer</small>
-                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ========================================
+    // Status Selector
+    // ========================================
+    initStatusSelector() {
+        const statusCards = document.querySelectorAll('.status-card');
+        statusCards.forEach((card) => {
+            card.addEventListener('click', () => {
+                statusCards.forEach((c) => c.classList.remove('selected'));
+                card.classList.add('selected');
+            });
+        });
+    }
+
+    // ========================================
+    // Registration Toggle
+    // ========================================
+    initRegistrationToggle() {
+        const toggle = document.getElementById('isRegistrationRequired');
+        const details = document.getElementById('registration-details');
+
+        toggle.addEventListener('change', () => {
+            details.style.display = toggle.checked ? 'block' : 'none';
+        });
+    }
+
+    // ========================================
+    // Character Counters
+    // ========================================
+    initCharCounters() {
+        const shortDesc = document.getElementById('shortDescription');
+        const shortCount = document.getElementById('shortDescCount');
+        const desc = document.getElementById('description');
+        const descCount = document.getElementById('descCount');
+
+        if (shortDesc && shortCount) {
+            shortDesc.addEventListener('input', () => {
+                shortCount.textContent = shortDesc.value.length;
+            });
+        }
+        if (desc && descCount) {
+            desc.addEventListener('input', () => {
+                descCount.textContent = desc.value.length;
+            });
+        }
+    }
+
+    // ========================================
+    // Field Modal (Registration Fields)
+    // ========================================
+    initFieldModal() {
+        const addBtn = document.getElementById('add-registration-field');
+        const modal = document.getElementById('field-modal');
+        const closeBtn = document.getElementById('close-field-modal');
+        const cancelBtn = document.getElementById('cancel-field-btn');
+        const saveBtn = document.getElementById('save-field-btn');
+        const typeCards = document.querySelectorAll('.field-type-card');
+        const optionsGroup = document.getElementById('fieldOptionsGroup');
+
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                this.resetFieldModal();
+                modal.classList.add('show');
+            });
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', () => modal.classList.remove('show'));
+        if (cancelBtn) cancelBtn.addEventListener('click', () => modal.classList.remove('show'));
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.remove('show');
+        });
+
+        // Field type selection
+        typeCards.forEach((card) => {
+            card.addEventListener('click', () => {
+                typeCards.forEach((c) => c.classList.remove('selected'));
+                card.classList.add('selected');
+
+                const type = card.querySelector('input').value;
+                const needsOptions = ['select', 'radio', 'checkbox'].includes(type);
+                optionsGroup.style.display = needsOptions ? 'block' : 'none';
+            });
+        });
+
+        // Save field
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                this.saveRegistrationField();
+            });
+        }
+
+        // Remove field delegation
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-field-btn')) {
+                const item = e.target.closest('.custom-field-item');
+                const index = parseInt(item.dataset.index);
+                this.registrationFields.splice(index, 1);
+                this.renderRegistrationFields();
+            }
+        });
+    }
+
+    resetFieldModal() {
+        document.getElementById('newFieldLabel').value = '';
+        document.getElementById('newFieldPlaceholder').value = '';
+        document.getElementById('newFieldOptions').value = '';
+        document.getElementById('newFieldRequired').checked = false;
+        document.getElementById('fieldOptionsGroup').style.display = 'none';
+
+        const typeCards = document.querySelectorAll('.field-type-card');
+        typeCards.forEach((c, i) => {
+            c.classList.toggle('selected', i === 0);
+        });
+        document.querySelector('input[name="newFieldType"][value="text"]').checked = true;
+    }
+
+    saveRegistrationField() {
+        const label = document.getElementById('newFieldLabel').value.trim();
+        const type = document.querySelector('input[name="newFieldType"]:checked').value;
+        const placeholder = document.getElementById('newFieldPlaceholder').value.trim();
+        const required = document.getElementById('newFieldRequired').checked;
+        const optionsText = document.getElementById('newFieldOptions').value.trim();
+
+        if (!label) {
+            this.showNotification('Please enter a field label', 'error');
+            return;
+        }
+
+        if (['select', 'radio', 'checkbox'].includes(type) && !optionsText) {
+            this.showNotification('Please enter options for this field type', 'error');
+            return;
+        }
+
+        const field = {
+            name: label,
+            type: type,
+            placeholder: placeholder,
+            required: required,
+            options: optionsText
+                ? optionsText
+                      .split('\n')
+                      .map((o) => o.trim())
+                      .filter((o) => o)
+                : [],
+        };
+
+        this.registrationFields.push(field);
+        this.renderRegistrationFields();
+        document.getElementById('field-modal').classList.remove('show');
+        this.showNotification('Field added successfully', 'success');
+    }
+
+    renderRegistrationFields() {
+        const container = document.getElementById('registration-fields-container');
+        container.innerHTML = '';
+
+        const typeIcons = {
+            text: 'fa-font',
+            textarea: 'fa-align-left',
+            select: 'fa-caret-square-down',
+            radio: 'fa-dot-circle',
+            checkbox: 'fa-check-square',
+            number: 'fa-hashtag',
+            email: 'fa-at',
+            date: 'fa-calendar',
+        };
+
+        const typeLabels = {
+            text: 'Text',
+            textarea: 'Long Text',
+            select: 'Dropdown',
+            radio: 'Single Choice',
+            checkbox: 'Multi Choice',
+            number: 'Number',
+            email: 'Email',
+            date: 'Date',
+        };
+
+        this.registrationFields.forEach((field, index) => {
+            const item = document.createElement('div');
+            item.className = 'custom-field-item';
+            item.dataset.index = index;
+            item.innerHTML = `
+                <div class="custom-field-info">
+                    <i class="fas ${typeIcons[field.type] || 'fa-font'}"></i>
+                    <strong>${this.escapeHtml(field.name)}</strong>
+                    <span class="field-type-badge">${typeLabels[field.type] || field.type}</span>
+                    ${field.required ? '<span class="req-badge">*</span>' : ''}
+                </div>
+                <button type="button" class="remove-field-btn" title="Remove field">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    // ========================================
+    // Image Uploads
+    // ========================================
+    initImageUploads() {
+        // Featured image
+        const featuredZone = document.getElementById('featuredDropzone');
+        const featuredInput = document.getElementById('featuredImageInput');
+
+        if (featuredZone && featuredInput) {
+            featuredZone.addEventListener('click', () => featuredInput.click());
+            featuredZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                featuredZone.classList.add('dragover');
+            });
+            featuredZone.addEventListener('dragleave', () =>
+                featuredZone.classList.remove('dragover')
+            );
+            featuredZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                featuredZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) this.uploadFeaturedImage(file);
+            });
+            featuredInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) this.uploadFeaturedImage(e.target.files[0]);
+            });
+        }
+
+        // Gallery images
+        const galleryZone = document.getElementById('imageDropzone');
+        const galleryInput = document.getElementById('imageUpload');
+
+        if (galleryZone && galleryInput) {
+            galleryZone.addEventListener('click', () => galleryInput.click());
+            galleryZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                galleryZone.classList.add('dragover');
+            });
+            galleryZone.addEventListener('dragleave', () =>
+                galleryZone.classList.remove('dragover')
+            );
+            galleryZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                galleryZone.classList.remove('dragover');
+                const files = Array.from(e.dataTransfer.files).filter((f) =>
+                    f.type.startsWith('image/')
+                );
+                if (files.length) this.uploadGalleryImages(files);
+            });
+            galleryInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length) this.uploadGalleryImages(files);
+            });
+        }
+    }
+
+    async uploadFeaturedImage(file) {
+        try {
+            const url = await this.uploadToCloudinary(file);
+            this.featuredImage = { url, alt: file.name };
+            this.renderFeaturedImage();
+        } catch (err) {
+            this.showNotification('Failed to upload image', 'error');
+        }
+    }
+
+    renderFeaturedImage() {
+        const preview = document.getElementById('featuredImagePreview');
+        const zone = document.getElementById('featuredDropzone');
+
+        if (this.featuredImage && this.featuredImage.url) {
+            preview.innerHTML = `
+                <div class="image-preview-item">
+                    <img src="${this.featuredImage.url}" alt="${
+                this.featuredImage.alt || ''
+            }" onerror="this.closest('.image-preview-item').innerHTML='<div style=\\'padding:1rem;color:#ef4444;font-size:0.75rem;\\'>Image missing - click X to remove</div><button type=\\'button\\' class=\\'image-preview-remove\\' onclick=\\'eventManager.removeFeaturedImage()\\'><i class=\\'fas fa-times\\'></i></button>'">
+                    <button type="button" class="image-preview-remove" onclick="eventManager.removeFeaturedImage()">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             `;
             preview.classList.add('show');
-            uploadArea.style.display = 'none';
+            zone.style.display = 'none';
         } else {
+            preview.innerHTML = '';
             preview.classList.remove('show');
-            uploadArea.style.display = 'block';
+            zone.style.display = 'block';
         }
     }
 
     removeFeaturedImage() {
         this.featuredImage = null;
-        this.displayFeaturedImagePreview();
+        this.renderFeaturedImage();
     }
 
-    initializeImageUpload() {
-        const dropzone = document.getElementById('imageDropzone');
-        const fileInput = document.getElementById('imageUpload');
-        const button = dropzone.querySelector('.btn');
+    async uploadGalleryImages(files) {
+        const progress = document.getElementById('uploadProgress');
+        const fill = document.getElementById('progressFill');
+        const text = document.getElementById('progressText');
 
-        // Drag and drop events
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropzone.classList.add('dragover');
-        });
+        progress.style.display = 'block';
 
-        dropzone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-            if (files.length > 0) {
-                this.handleImageFiles(files);
-            }
-        });
-
-        // File input change
-        fileInput.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
-            if (files.length > 0) {
-                this.handleImageFiles(files);
-            }
-        });
-
-        // Button click to open file dialog
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            fileInput.click();
-        });
-
-        // Dropzone click (but not on button)
-        dropzone.addEventListener('click', (e) => {
-            if (e.target === dropzone || e.target === dropzone.querySelector('i') || e.target === dropzone.querySelector('p')) {
-                fileInput.click();
-            }
-        });
-    }
-
-    async handleImageFiles(files) {
-        if (files.length === 0) return;
-
-        const progressContainer = document.getElementById('uploadProgress');
-        const progressFill = document.getElementById('progressFill');
-        const progressText = document.getElementById('progressText');
-
-        progressContainer.style.display = 'block';
-        
         for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            
-            // Update progress
-            const progress = ((i + 1) / files.length) * 100;
-            progressFill.style.width = `${progress}%`;
-            progressText.textContent = `Uploading ${i + 1} of ${files.length}...`;
+            fill.style.width = `${((i + 1) / files.length) * 100}%`;
+            text.textContent = `Uploading ${i + 1} of ${files.length}...`;
 
             try {
-                const imageUrl = await this.uploadImageToCloudinary(file);
-                this.uploadedImages.push({
-                    url: imageUrl,
-                    alt: file.name,
-                    caption: ''
-                });
-                this.refreshImagePreviews();
-            } catch (error) {
-                console.error('Error uploading image:', error);
-                this.showNotification(`Failed to upload ${file.name}`, 'error');
+                const url = await this.uploadToCloudinary(files[i]);
+                this.uploadedImages.push({ url, alt: files[i].name });
+            } catch (err) {
+                this.showNotification(`Failed to upload ${files[i].name}`, 'error');
             }
         }
 
-        progressContainer.style.display = 'none';
-        fileInput.value = ''; // Reset file input
+        progress.style.display = 'none';
+        this.renderGalleryImages();
+        document.getElementById('imageUpload').value = '';
     }
 
-    async uploadImageToCloudinary(file) {
+    renderGalleryImages() {
+        const container = document.getElementById('imagePreviewContainer');
+        container.innerHTML = this.uploadedImages
+            .map(
+                (img, i) => `
+            <div class="image-preview-item" data-index="${i}">
+                <img src="${img.url}" alt="${
+                    img.alt || ''
+                }" onerror="this.closest('.image-preview-item').innerHTML='<div style=\\'padding:0.5rem;color:#ef4444;font-size:0.65rem;text-align:center;\\'>Missing</div><button type=\\'button\\' class=\\'image-preview-remove\\' onclick=\\'eventManager.removeGalleryImage(${i})\\'><i class=\\'fas fa-times\\'></i></button>'">
+                <button type="button" class="image-preview-remove" onclick="eventManager.removeGalleryImage(${i})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `
+            )
+            .join('');
+    }
+
+    removeGalleryImage(index) {
+        this.uploadedImages.splice(index, 1);
+        this.renderGalleryImages();
+    }
+
+    async uploadToCloudinary(file) {
         const formData = new FormData();
         formData.append('image', file);
-
-        const response = await fetch('/api/upload/image', {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            throw new Error('Upload failed');
-        }
-
-        const data = await response.json();
+        const res = await fetch('/api/upload/image', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error('Upload failed');
+        const data = await res.json();
         return data.url;
     }
 
-    refreshImagePreviews() {
-        const previewContainer = document.getElementById('imagePreviewContainer');
-        previewContainer.innerHTML = '';
-        
-        this.uploadedImages.forEach((image, index) => {
-            const previewItem = document.createElement('div');
-            previewItem.className = 'image-preview-item';
-            previewItem.innerHTML = `
-                <img src="${image.url}" alt="${image.alt}" loading="lazy">
-                <button type="button" class="image-preview-remove" onclick="eventManager.removeImage(${index})">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            previewContainer.appendChild(previewItem);
-        });
-    }
-
-    removeImage(index) {
-        this.uploadedImages.splice(index, 1);
-        this.refreshImagePreviews();
-    }
-
+    // ========================================
+    // Event Binding
+    // ========================================
     bindEvents() {
-        // Create event button
-        document.getElementById('create-event-btn').addEventListener('click', () => {
-            this.openModal('create');
-        });
-
-        // Close modal
-        document.getElementById('close-modal').addEventListener('click', () => {
-            this.closeModal();
-        });
-
-        document.getElementById('cancel-btn').addEventListener('click', () => {
-            this.closeModal();
-        });
-
-        // Form submit
+        document
+            .getElementById('create-event-btn')
+            .addEventListener('click', () => this.openModal('create'));
+        document.getElementById('close-modal').addEventListener('click', () => this.closeModal());
+        document.getElementById('cancel-btn').addEventListener('click', () => this.closeModal());
         document.getElementById('event-form').addEventListener('submit', (e) => {
             e.preventDefault();
             this.saveEvent();
         });
-
-        // Search and filters
-        document.getElementById('search').addEventListener('input', () => {
-            this.filterEvents();
-        });
-
-        document.getElementById('filter-category').addEventListener('change', () => {
-            this.filterEvents();
-        });
-
-        document.getElementById('filter-status').addEventListener('change', () => {
-            this.filterEvents();
-        });
-
-        // Modal click outside to close
         document.getElementById('event-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'event-modal') {
-                this.closeModal();
-            }
+            if (e.target.id === 'event-modal') this.closeModal();
         });
 
-        // Table action buttons
+        document.getElementById('search').addEventListener('input', () => this.filterEvents());
+        document
+            .getElementById('filter-category')
+            .addEventListener('change', () => this.filterEvents());
+        document
+            .getElementById('filter-status')
+            .addEventListener('change', () => this.filterEvents());
+
+        document.getElementById('add-speaker').addEventListener('click', () => this.addSpeaker());
+
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.btn-edit')) {
-                const id = e.target.closest('.btn-edit').dataset.id;
-                this.editEvent(id);
-            }
-            
-            if (e.target.closest('.btn-duplicate')) {
-                const id = e.target.closest('.btn-duplicate').dataset.id;
-                this.duplicateEvent(id);
-            }
-            
-            if (e.target.closest('.btn-delete')) {
-                const id = e.target.closest('.btn-delete').dataset.id;
-                this.deleteEvent(id);
-            }
-        });
-
-        // Add speaker button
-        document.getElementById('add-speaker').addEventListener('click', () => {
-            this.addSpeaker();
+            if (e.target.closest('.btn-edit'))
+                this.editEvent(e.target.closest('.btn-edit').dataset.id);
+            if (e.target.closest('.btn-duplicate'))
+                this.duplicateEvent(e.target.closest('.btn-duplicate').dataset.id);
+            if (e.target.closest('.btn-delete'))
+                this.deleteEvent(e.target.closest('.btn-delete').dataset.id);
+            if (e.target.closest('.remove-speaker')) e.target.closest('.speaker-item').remove();
         });
     }
 
-    initializeSpeakers() {
-        // Remove speaker functionality
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.remove-speaker')) {
-                e.target.closest('.speaker-item').remove();
-            }
-        });
-    }
-
-    initializeRegistrationToggle() {
-        const registrationCheckbox = document.getElementById('isRegistrationRequired');
-        const registrationDetails = document.getElementById('registration-details');
-
-        registrationCheckbox.addEventListener('change', () => {
-            registrationDetails.style.display = registrationCheckbox.checked ? 'block' : 'none';
-        });
-    }
-
-    addSpeaker() {
+    // ========================================
+    // Speakers
+    // ========================================
+    addSpeaker(data = {}) {
         const container = document.getElementById('speakers-container');
-        const speakerItem = document.createElement('div');
-        speakerItem.className = 'speaker-item';
-        speakerItem.innerHTML = `
+        const item = document.createElement('div');
+        item.className = 'speaker-item';
+        item.innerHTML = `
+            <div class="speaker-header">
+                <strong>Speaker ${container.children.length + 1}</strong>
+                <button type="button" class="remove-speaker"><i class="fas fa-times"></i></button>
+            </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Speaker Name</label>
-                    <input type="text" name="speaker-name-${this.speakerCount}" placeholder="Full name">
+                    <label>Name</label>
+                    <input type="text" name="speaker-name-${this.speakerCount}" value="${
+            data.name || ''
+        }" placeholder="Full name">
                 </div>
-                
                 <div class="form-group">
                     <label>Title</label>
-                    <input type="text" name="speaker-title-${this.speakerCount}" placeholder="Job title or role">
+                    <input type="text" name="speaker-title-${this.speakerCount}" value="${
+            data.title || ''
+        }" placeholder="Job title">
                 </div>
             </div>
-            
             <div class="form-row">
                 <div class="form-group">
                     <label>Organization</label>
-                    <input type="text" name="speaker-organization-${this.speakerCount}" placeholder="Company or organization">
+                    <input type="text" name="speaker-organization-${this.speakerCount}" value="${
+            data.organization || ''
+        }">
                 </div>
-                
                 <div class="form-group">
                     <label>Photo URL</label>
-                    <input type="url" name="speaker-photo-${this.speakerCount}" placeholder="https://example.com/photo.jpg">
+                    <input type="url" name="speaker-photo-${this.speakerCount}" value="${
+            data.photo || ''
+        }">
                 </div>
             </div>
-            
             <div class="form-group">
                 <label>Bio</label>
-                <textarea name="speaker-bio-${this.speakerCount}" rows="2" placeholder="Brief biography"></textarea>
+                <textarea name="speaker-bio-${this.speakerCount}" rows="2">${
+            data.bio || ''
+        }</textarea>
             </div>
-            
-            <button type="button" class="btn btn-delete btn-sm remove-speaker">
-                <i class="fas fa-trash"></i> Remove Speaker
-            </button>
         `;
-        
-        container.appendChild(speakerItem);
+        container.appendChild(item);
         this.speakerCount++;
     }
 
+    // ========================================
+    // CRUD Operations
+    // ========================================
     async loadEvents() {
         try {
-            const response = await fetch('/api/events');
-            const data = await response.json();
+            const res = await fetch('/api/events');
+            const data = await res.json();
             this.events = data.events || [];
             this.renderEvents();
             this.updateStats();
-        } catch (error) {
-            console.error('Error loading events:', error);
+        } catch (err) {
             this.showNotification('Failed to load events', 'error');
         }
     }
 
     async saveEvent() {
-        const eventData = this.formDataToObject();
-
-        if (!this.validateForm(eventData)) {
-            return;
-        }
+        const eventData = this.collectFormData();
+        if (!this.validateForm(eventData)) return;
 
         try {
             const url = this.currentEditId ? `/api/events/${this.currentEditId}` : '/api/events';
             const method = this.currentEditId ? 'PUT' : 'POST';
 
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(eventData)
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(eventData),
             });
 
-            if (response.ok) {
+            if (res.ok) {
                 this.showNotification(
-                    this.currentEditId ? 'Event updated successfully!' : 'Event created successfully!',
+                    this.currentEditId ? 'Event updated!' : 'Event created!',
                     'success'
                 );
                 this.closeModal();
                 this.loadEvents();
             } else {
-                const error = await response.json();
-                this.showNotification('Error: ' + (error.message || 'Failed to save event'), 'error');
+                const err = await res.json();
+                this.showNotification(err.message || 'Failed to save', 'error');
             }
-        } catch (error) {
-            console.error('Error saving event:', error);
+        } catch (err) {
             this.showNotification('Failed to save event', 'error');
         }
     }
 
     async editEvent(id) {
         try {
-            const response = await fetch(`/api/events/${id}`);
-            const data = await response.json();
-            
-            if (response.ok) {
+            const res = await fetch(`/api/events/${id}`);
+            const data = await res.json();
+            if (res.ok) {
                 this.populateForm(data.event);
                 this.openModal('edit');
                 this.currentEditId = id;
             } else {
-                this.showNotification('Failed to load event details', 'error');
+                this.showNotification(`Failed to load event: ${data.message || res.status}`, 'error');
             }
-        } catch (error) {
-            console.error('Error loading event:', error);
-            this.showNotification('Failed to load event details', 'error');
+        } catch (err) {
+            console.error('Edit event error:', err);
+            this.showNotification(`Failed to load event: ${err.message}`, 'error');
         }
     }
 
     async duplicateEvent(id) {
-        if (confirm('Are you sure you want to duplicate this event?')) {
-            try {
-                const response = await fetch(`/api/events/${id}/duplicate`, {
-                    method: 'POST'
-                });
-
-                if (response.ok) {
-                    this.showNotification('Event duplicated successfully!', 'success');
-                    this.loadEvents();
-                } else {
-                    this.showNotification('Failed to duplicate event', 'error');
-                }
-            } catch (error) {
-                console.error('Error duplicating event:', error);
-                this.showNotification('Failed to duplicate event', 'error');
+        if (!confirm('Duplicate this event?')) return;
+        try {
+            const res = await fetch(`/api/events/${id}/duplicate`, { method: 'POST' });
+            if (res.ok) {
+                this.showNotification('Event duplicated!', 'success');
+                this.loadEvents();
             }
+        } catch (err) {
+            this.showNotification('Failed to duplicate', 'error');
         }
     }
 
     async deleteEvent(id) {
-        if (confirm('Are you sure you want to delete this event?')) {
-            try {
-                const response = await fetch(`/api/events/${id}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    this.showNotification('Event deleted successfully!', 'success');
-                    this.loadEvents();
-                } else {
-                    this.showNotification('Failed to delete event', 'error');
-                }
-            } catch (error) {
-                console.error('Error deleting event:', error);
-                this.showNotification('Failed to delete event', 'error');
+        if (!confirm('Delete this event?')) return;
+        try {
+            const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                this.showNotification('Event deleted!', 'success');
+                this.loadEvents();
             }
+        } catch (err) {
+            this.showNotification('Failed to delete', 'error');
         }
     }
 
+    // ========================================
+    // Modal
+    // ========================================
     openModal(mode) {
         const modal = document.getElementById('event-modal');
-        const title = document.getElementById('modal-title');
-        const saveBtn = document.getElementById('save-btn');
+        document.getElementById('modal-title').textContent =
+            mode === 'create' ? 'Create Event' : 'Edit Event';
+        document.getElementById('save-btn').innerHTML =
+            mode === 'create'
+                ? '<i class="fas fa-save"></i> Create Event'
+                : '<i class="fas fa-save"></i> Update Event';
 
         if (mode === 'create') {
-            title.textContent = 'Create Event';
-            saveBtn.textContent = 'Create Event';
             this.resetForm();
             this.currentEditId = null;
-        } else {
-            title.textContent = 'Edit Event';
-            saveBtn.textContent = 'Update Event';
         }
 
         modal.classList.add('show');
@@ -487,224 +743,264 @@ class EventManager {
     }
 
     closeModal() {
-        const modal = document.getElementById('event-modal');
-        modal.classList.remove('show');
-        document.body.style.overflow = 'auto';
-        this.resetForm();
+        document.getElementById('event-modal').classList.remove('show');
+        document.body.style.overflow = '';
         this.currentEditId = null;
     }
 
+    // ========================================
+    // Form Handling
+    // ========================================
     resetForm() {
         document.getElementById('event-form').reset();
-        
-        // Reset featured image
-        this.featuredImage = null;
-        this.displayFeaturedImagePreview();
-        
-        // Reset uploaded images
-        this.uploadedImages = [];
-        document.getElementById('imagePreviewContainer').innerHTML = '';
-        document.getElementById('uploadProgress').style.display = 'none';
 
-        // Reset speakers to one empty speaker
-        const speakersContainer = document.getElementById('speakers-container');
-        speakersContainer.innerHTML = `
-            <div class="speaker-item">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Speaker Name</label>
-                        <input type="text" name="speaker-name-0" placeholder="Full name">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Title</label>
-                        <input type="text" name="speaker-title-0" placeholder="Job title or role">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Organization</label>
-                        <input type="text" name="speaker-organization-0" placeholder="Company or organization">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Photo URL</label>
-                        <input type="url" name="speaker-photo-0" placeholder="https://example.com/photo.jpg">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Bio</label>
-                    <textarea name="speaker-bio-0" rows="2" placeholder="Brief biography"></textarea>
-                </div>
-            </div>
-        `;
-        
-        this.speakerCount = 1;
-        
-        // Hide registration details
+        // Reset event type selector
+        document
+            .querySelectorAll('.event-type-card')
+            .forEach((c, i) => c.classList.toggle('selected', i === 0));
+        document.getElementById('single-event-schedule').style.display = 'block';
+        document.getElementById('recurring-event-schedule').style.display = 'none';
+
+        // Reset frequency
+        document
+            .querySelectorAll('#frequency-selector .pill')
+            .forEach((p, i) => p.classList.toggle('selected', i === 0));
+        document.getElementById('days-of-week-group').style.display = 'block';
+        document.getElementById('monthly-type-group').style.display = 'none';
+        document.getElementById('custom-dates-group').style.display = 'none';
+        const dateRangeGroup = document.getElementById('recurring-date-range-group');
+        if (dateRangeGroup) dateRangeGroup.style.display = 'flex';
+
+        // Reset custom dates
+        this.customDates = [];
+        this.renderCustomDates();
+
+        // Reset day pills
+        document.querySelectorAll('.day-pill').forEach((p) => {
+            p.classList.remove('selected');
+            p.querySelector('input').checked = false;
+        });
+
+        // Reset status
+        document
+            .querySelectorAll('.status-card')
+            .forEach((c, i) => c.classList.toggle('selected', i === 0));
+
+        // Reset registration
         document.getElementById('registration-details').style.display = 'none';
-        
-        // Set default values
-        document.getElementById('category').value = 'community-service';
-        document.getElementById('eventType').value = 'in-person';
-        document.getElementById('status').value = 'draft';
-        document.getElementById('timezone').value = 'America/Indiana/Indianapolis';
+        this.registrationFields = [];
+        this.renderRegistrationFields();
+
+        // Reset images
+        this.featuredImage = null;
+        this.uploadedImages = [];
+        this.renderFeaturedImage();
+        this.renderGalleryImages();
+
+        // Reset speakers
+        document.getElementById('speakers-container').innerHTML = '';
+        this.speakerCount = 0;
+
+        // Reset char counts
+        document.getElementById('shortDescCount').textContent = '0';
+        document.getElementById('descCount').textContent = '0';
+
+        // Set defaults
         document.getElementById('isPublic').checked = true;
     }
 
     populateForm(event) {
-        // Basic information
+        // Basic info
         document.getElementById('title').value = event.title || '';
         document.getElementById('shortDescription').value = event.shortDescription || '';
         document.getElementById('description').value = event.description || '';
         document.getElementById('category').value = event.category || 'community-service';
         document.getElementById('eventType').value = event.eventType || 'in-person';
         document.getElementById('tags').value = event.tags ? event.tags.join(', ') : '';
-        
-        // Date & Time
-        if (event.eventDate) {
-            const eventDate = new Date(event.eventDate);
-            document.getElementById('eventDate').value = eventDate.toISOString().split('T')[0];
+
+        // Update char counts
+        document.getElementById('shortDescCount').textContent = (
+            event.shortDescription || ''
+        ).length;
+        document.getElementById('descCount').textContent = (event.description || '').length;
+
+        // Schedule type
+        const isRecurring = event.recurring && event.recurring.isRecurring;
+        document.querySelectorAll('.event-type-card').forEach((c) => {
+            c.classList.toggle(
+                'selected',
+                c.dataset.type === (isRecurring ? 'recurring' : 'single')
+            );
+        });
+        document.getElementById('single-event-schedule').style.display = isRecurring
+            ? 'none'
+            : 'block';
+        document.getElementById('recurring-event-schedule').style.display = isRecurring
+            ? 'block'
+            : 'none';
+
+        if (isRecurring) {
+            // Recurring settings
+            const freq = event.recurring.frequency || 'weekly';
+            document.querySelectorAll('#frequency-selector .pill').forEach((p) => {
+                p.classList.toggle('selected', p.querySelector('input').value === freq);
+            });
+
+            // Show/hide appropriate groups based on frequency
+            const daysGroup = document.getElementById('days-of-week-group');
+            const monthlyGroup = document.getElementById('monthly-type-group');
+            const customDatesGroup = document.getElementById('custom-dates-group');
+            const dateRangeGroup = document.getElementById('recurring-date-range-group');
+
+            if (freq === 'custom') {
+                daysGroup.style.display = 'none';
+                customDatesGroup.style.display = 'block';
+                if (dateRangeGroup) dateRangeGroup.style.display = 'none';
+                // Load custom dates
+                this.customDates = event.recurring.customDates || [];
+                this.renderCustomDates();
+            } else {
+                customDatesGroup.style.display = 'none';
+                if (dateRangeGroup) dateRangeGroup.style.display = 'flex';
+                daysGroup.style.display = freq === 'daily' ? 'none' : 'block';
+                this.customDates = [];
+                this.renderCustomDates();
+            }
+
+            monthlyGroup.style.display = freq === 'monthly' ? 'block' : 'none';
+
+            // Days of week
+            const days = event.recurring.daysOfWeek || [];
+            document.querySelectorAll('.day-pill').forEach((p) => {
+                const val = parseInt(p.querySelector('input').value);
+                p.classList.toggle('selected', days.includes(val));
+                p.querySelector('input').checked = days.includes(val);
+            });
+
+            if (event.recurring.startDate) {
+                document.getElementById('recurringStartDate').value = new Date(
+                    event.recurring.startDate
+                )
+                    .toISOString()
+                    .split('T')[0];
+            }
+            if (event.recurring.endDate) {
+                document.getElementById('recurringEndDate').value = new Date(
+                    event.recurring.endDate
+                )
+                    .toISOString()
+                    .split('T')[0];
+            }
+            document.getElementById('recurringStartTime').value = event.startTime || '';
+            document.getElementById('recurringEndTime').value = event.endTime || '';
+        } else {
+            if (event.eventDate) {
+                document.getElementById('eventDate').value = new Date(event.eventDate)
+                    .toISOString()
+                    .split('T')[0];
+            }
+            document.getElementById('startTime').value = event.startTime || '';
+            document.getElementById('endTime').value = event.endTime || '';
         }
-        
-        document.getElementById('startTime').value = event.startTime || '';
-        document.getElementById('endTime').value = event.endTime || '';
-        document.getElementById('timezone').value = event.timezone || 'America/Indiana/Indianapolis';
-        
+
+        document.getElementById('timezone').value =
+            event.timezone || 'America/Indiana/Indianapolis';
+
         // Location
         if (event.location) {
             document.getElementById('venue').value = event.location.venue || '';
-            if (event.location.address) {
-                document.getElementById('street').value = event.location.address.street || '';
-                document.getElementById('city').value = event.location.address.city || '';
-                document.getElementById('state').value = event.location.address.state || '';
-                document.getElementById('zipCode').value = event.location.address.zipCode || '';
-            }
+            document.getElementById('street').value = event.location.address?.street || '';
+            document.getElementById('city').value = event.location.address?.city || '';
+            document.getElementById('state').value = event.location.address?.state || '';
+            document.getElementById('zipCode').value = event.location.address?.zipCode || '';
             document.getElementById('virtualLink').value = event.location.virtualLink || '';
         }
-        
-        // Load existing featured image
-        if (event.media && event.media.featuredImage && event.media.featuredImage.url) {
-            this.featuredImage = {
-                url: event.media.featuredImage.url,
-                alt: event.media.featuredImage.alt || 'Event flyer'
-            };
-            this.displayFeaturedImagePreview();
-        }
-        
-        // Load existing images
-        if (event.media && event.media.gallery) {
-            this.uploadedImages = event.media.gallery.map(img => ({
-                url: img.url || img,
-                alt: img.alt || '',
-                caption: img.caption || ''
-            }));
-            this.refreshImagePreviews();
-        }
-        
-        // Videos
-        if (event.media && event.media.videos && event.media.videos[0]) {
-            document.getElementById('videoUrl').value = event.media.videos[0].url || '';
-            document.getElementById('videoTitle').value = event.media.videos[0].title || '';
-        }
-        
+
         // Registration
         if (event.registration) {
-            document.getElementById('isRegistrationRequired').checked = event.registration.isRequired || false;
-            document.getElementById('registration-details').style.display = 
-                event.registration.isRequired ? 'block' : 'none';
-            
+            document.getElementById('isRegistrationRequired').checked =
+                event.registration.isRequired;
+            document.getElementById('registration-details').style.display = event.registration
+                .isRequired
+                ? 'block'
+                : 'none';
             document.getElementById('maxAttendees').value = event.registration.maxAttendees || '';
             document.getElementById('registrationFee').value = event.registration.fee?.amount || '';
-            
+            document.getElementById('waitlistEnabled').checked =
+                event.registration.waitlistEnabled || false;
+
             if (event.registration.registrationDeadline) {
-                const deadline = new Date(event.registration.registrationDeadline);
-                document.getElementById('registrationDeadline').value = deadline.toISOString().split('T')[0];
+                document.getElementById('registrationDeadline').value = new Date(
+                    event.registration.registrationDeadline
+                )
+                    .toISOString()
+                    .split('T')[0];
+            }
+
+            this.registrationFields = event.registration.fields || [];
+            this.renderRegistrationFields();
+        }
+
+        // Media
+        this.featuredImage = null;
+        this.uploadedImages = [];
+        if (event.media) {
+            if (event.media.featuredImage && event.media.featuredImage.url) {
+                this.featuredImage = event.media.featuredImage;
+            }
+            if (Array.isArray(event.media.gallery)) {
+                this.uploadedImages = event.media.gallery.filter(img => img && img.url);
+            }
+            if (event.media.videos && event.media.videos[0]) {
+                document.getElementById('videoUrl').value = event.media.videos[0].url || '';
+                document.getElementById('videoTitle').value = event.media.videos[0].title || '';
             }
         }
-        
-        // Settings
-        document.getElementById('status').value = event.status || 'draft';
-        document.getElementById('featured').checked = event.featured || false;
-        document.getElementById('isPublic').checked = event.isPublic !== undefined ? event.isPublic : true;
-        document.getElementById('isRecurring').checked = event.recurring?.isRecurring || false;
-        
+        this.renderFeaturedImage();
+        this.renderGalleryImages();
+
         // Speakers
-        this.populateSpeakers(event.speakers || []);
-    }
+        document.getElementById('speakers-container').innerHTML = '';
+        this.speakerCount = 0;
+        (event.speakers || []).forEach((s) => this.addSpeaker(s));
 
-    populateSpeakers(speakers) {
-        const container = document.getElementById('speakers-container');
-        container.innerHTML = '';
-        
-        if (speakers.length === 0) {
-            speakers = [{}]; // Add one empty speaker
-        }
-        
-        speakers.forEach((speaker, index) => {
-            const speakerItem = document.createElement('div');
-            speakerItem.className = 'speaker-item';
-            speakerItem.innerHTML = `
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Speaker Name</label>
-                        <input type="text" name="speaker-name-${index}" placeholder="Full name" value="${speaker.name || ''}">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Title</label>
-                        <input type="text" name="speaker-title-${index}" placeholder="Job title or role" value="${speaker.title || ''}">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Organization</label>
-                        <input type="text" name="speaker-organization-${index}" placeholder="Company or organization" value="${speaker.organization || ''}">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Photo URL</label>
-                        <input type="url" name="speaker-photo-${index}" placeholder="https://example.com/photo.jpg" value="${speaker.photo || ''}">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Bio</label>
-                    <textarea name="speaker-bio-${index}" rows="2" placeholder="Brief biography">${speaker.bio || ''}</textarea>
-                </div>
-                
-                ${index > 0 ? '<button type="button" class="btn btn-delete btn-sm remove-speaker"><i class="fas fa-trash"></i> Remove Speaker</button>' : ''}
-            `;
-            
-            container.appendChild(speakerItem);
+        // Settings
+        const validStatuses = ['draft', 'published', 'cancelled', 'completed'];
+        const status = validStatuses.includes(event.status) ? event.status : 'draft';
+        document.querySelectorAll('.status-card').forEach((c) => {
+            c.classList.toggle('selected', c.querySelector('input').value === status);
         });
-        
-        this.speakerCount = speakers.length;
+        const statusInput = document.querySelector(`input[name="status"][value="${status}"]`);
+        if (statusInput) statusInput.checked = true;
+
+        document.getElementById('featured').checked = event.featured || false;
+        document.getElementById('isPublic').checked = event.isPublic !== false;
     }
 
-    formDataToObject() {
+    collectFormData() {
         const form = document.getElementById('event-form');
         const formData = new FormData(form);
-        
-        // Build speakers array
+
+        const isRecurring =
+            document.querySelector('.event-type-card.selected').dataset.type === 'recurring';
+
+        // Speakers
         const speakers = [];
-        for (let i = 0; i < this.speakerCount; i++) {
-            const name = formData.get(`speaker-name-${i}`);
-            if (name && name.trim()) {
+        document.querySelectorAll('.speaker-item').forEach((item, i) => {
+            const name = item.querySelector(`input[name^="speaker-name"]`).value.trim();
+            if (name) {
                 speakers.push({
-                    name: name.trim(),
-                    title: formData.get(`speaker-title-${i}`) || '',
-                    organization: formData.get(`speaker-organization-${i}`) || '',
-                    photo: formData.get(`speaker-photo-${i}`) || '',
-                    bio: formData.get(`speaker-bio-${i}`) || ''
+                    name,
+                    title: item.querySelector(`input[name^="speaker-title"]`).value || '',
+                    organization:
+                        item.querySelector(`input[name^="speaker-organization"]`).value || '',
+                    photo: item.querySelector(`input[name^="speaker-photo"]`).value || '',
+                    bio: item.querySelector(`textarea[name^="speaker-bio"]`).value || '',
                 });
             }
-        }
+        });
 
-        // Build location object
+        // Location
         const location = {
             venue: formData.get('venue') || '',
             address: {
@@ -712,186 +1008,210 @@ class EventManager {
                 city: formData.get('city') || '',
                 state: formData.get('state') || '',
                 zipCode: formData.get('zipCode') || '',
-                country: 'USA'
+                country: 'USA',
             },
-            virtualLink: formData.get('virtualLink') || ''
+            virtualLink: formData.get('virtualLink') || '',
         };
 
-        // Build media object with featured image and gallery
+        // Media
         const media = {
-            featuredImage: this.featuredImage || null,
-            gallery: this.uploadedImages || [],
-            videos: []
+            featuredImage: this.featuredImage,
+            gallery: this.uploadedImages,
+            videos: [],
         };
-
         if (formData.get('videoUrl')) {
             media.videos.push({
-                title: formData.get('videoTitle') || '',
                 url: formData.get('videoUrl'),
-                platform: this.getVideoPlatform(formData.get('videoUrl'))
+                title: formData.get('videoTitle') || '',
             });
         }
 
-        // Build registration object
+        // Registration
         const registration = {
             isRequired: formData.has('isRegistrationRequired'),
-            maxAttendees: formData.get('maxAttendees') ? parseInt(formData.get('maxAttendees')) : null,
-            fee: {
-                amount: formData.get('registrationFee') ? parseFloat(formData.get('registrationFee')) : 0,
-                currency: 'USD'
-            },
-            fields: [],
+            maxAttendees: formData.get('maxAttendees')
+                ? parseInt(formData.get('maxAttendees'))
+                : null,
+            fee: { amount: parseFloat(formData.get('registrationFee')) || 0, currency: 'USD' },
+            registrationDeadline: formData.get('registrationDeadline') || null,
+            waitlistEnabled: formData.has('waitlistEnabled'),
+            fields: this.registrationFields,
             isOpen: true,
-            waitlistEnabled: false
         };
 
-        if (formData.get('registrationDeadline')) {
-            registration.registrationDeadline = formData.get('registrationDeadline');
+        // Tags
+        const tagsStr = formData.get('tags') || '';
+        const tags = tagsStr
+            .split(',')
+            .map((t) => t.trim().toLowerCase())
+            .filter((t) => t);
+
+        // Recurring
+        let recurring = { isRecurring: false };
+        let eventDate = formData.get('eventDate');
+        let startTime = formData.get('startTime');
+        let endTime = formData.get('endTime');
+
+        if (isRecurring) {
+            const frequency = document.querySelector('#frequency-selector .pill.selected input').value;
+            const daysOfWeek = [];
+            document.querySelectorAll('.day-pill.selected input').forEach((inp) => {
+                daysOfWeek.push(parseInt(inp.value));
+            });
+
+            recurring = {
+                isRecurring: true,
+                frequency,
+                daysOfWeek,
+                startDate: formData.get('recurringStartDate'),
+                endDate: formData.get('recurringEndDate') || null,
+                monthlyType: formData.get('monthlyType') || 'date',
+                customDates: frequency === 'custom' ? this.customDates : [],
+            };
+
+            if (frequency === 'custom' && this.customDates.length > 0) {
+                eventDate = this.customDates[0];
+            } else {
+                eventDate = formData.get('recurringStartDate');
+            }
+            startTime = formData.get('recurringStartTime');
+            endTime = formData.get('recurringEndTime');
         }
 
-        // Process tags
-        const tagsInput = formData.get('tags') || '';
-        const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim().toLowerCase()).filter(tag => tag.length > 0) : [];
-
-        const data = {
+        return {
             title: formData.get('title'),
             shortDescription: formData.get('shortDescription') || '',
             description: formData.get('description'),
             category: formData.get('category'),
             eventType: formData.get('eventType'),
             status: formData.get('status'),
-            eventDate: formData.get('eventDate'),
-            startTime: formData.get('startTime'),
-            endTime: formData.get('endTime'),
-            timezone: formData.get('timezone'),
-            location: location,
-            speakers: speakers,
-            media: media,
-            registration: registration,
-            tags: tags,
+            eventDate,
+            startTime,
+            endTime,
+            timezone:
+                formData.get('timezone') ||
+                formData.get('timezoneRecurring') ||
+                'America/Indiana/Indianapolis',
+            location,
+            speakers,
+            media,
+            registration,
+            tags,
             featured: formData.has('featured'),
             isPublic: formData.has('isPublic'),
-            recurring: {
-                isRecurring: formData.has('isRecurring'),
-                frequency: formData.has('isRecurring') ? 'weekly' : undefined,
-                interval: 1
-            }
+            recurring,
         };
-
-        return data;
-    }
-
-    getVideoPlatform(url) {
-        if (!url) return 'other';
-        if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
-        if (url.includes('vimeo.com')) return 'vimeo';
-        if (url.includes('facebook.com')) return 'facebook';
-        if (url.includes('instagram.com')) return 'instagram';
-        return 'other';
     }
 
     validateForm(data) {
-        if (!data.title || !data.title.trim()) {
-            this.showNotification('Event title is required', 'error');
+        if (!data.title?.trim()) {
+            this.showNotification('Title is required', 'error');
             return false;
         }
-        
-        if (!data.description || !data.description.trim()) {
-            this.showNotification('Event description is required', 'error');
+        if (!data.description?.trim()) {
+            this.showNotification('Description is required', 'error');
             return false;
         }
-
         if (!data.eventDate) {
-            this.showNotification('Event date is required', 'error');
+            this.showNotification('Date is required', 'error');
             return false;
         }
-        
+        if (data.recurring.isRecurring) {
+            if (data.recurring.frequency === 'custom') {
+                if (!data.recurring.customDates || data.recurring.customDates.length === 0) {
+                    this.showNotification('Please add at least one date', 'error');
+                    return false;
+                }
+            } else if (
+                data.recurring.daysOfWeek.length === 0 &&
+                data.recurring.frequency !== 'daily'
+            ) {
+                this.showNotification('Please select at least one day', 'error');
+                return false;
+            }
+        }
         return true;
     }
 
+    // ========================================
+    // Render & Filter
+    // ========================================
     renderEvents() {
         const tbody = document.getElementById('events-table');
-        
-        // Clear existing rows
-        tbody.innerHTML = '';
 
-        if (this.events.length === 0) {
+        if (!this.events.length) {
             tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="empty-state">
-                        <div class="empty-content">
-                            <i class="fas fa-calendar-times"></i>
-                            <h3>No events found</h3>
-                            <p>Create your first event to get started</p>
-                        </div>
-                    </td>
-                </tr>
+                <tr><td colspan="6" class="empty-state">
+                    <div class="empty-content">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No events found</h3>
+                        <p>Create your first event to get started</p>
+                    </div>
+                </td></tr>
             `;
             return;
         }
 
-        this.events.forEach(event => {
-            const row = this.createEventRow(event);
-            tbody.appendChild(row);
-        });
-    }
+        tbody.innerHTML = this.events
+            .map((e) => {
+                const date = new Date(e.eventDate).toLocaleDateString();
+                const cat = e.category
+                    .split('-')
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join(' ');
+                const status = e.status.charAt(0).toUpperCase() + e.status.slice(1);
+                const type = e.eventType
+                    .split('-')
+                    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                    .join('-');
+                const desc = e.shortDescription || e.description?.substring(0, 60) + '...' || '';
 
-    createEventRow(event) {
-        const row = document.createElement('tr');
-        row.dataset.id = event._id;
-
-        const eventDate = new Date(event.eventDate).toLocaleDateString();
-        const categoryFormatted = this.formatCategory(event.category);
-        const statusFormatted = event.status.charAt(0).toUpperCase() + event.status.slice(1);
-        const typeFormatted = event.eventType.charAt(0).toUpperCase() + event.eventType.slice(1);
-        const description = event.shortDescription || 
-            (event.description ? event.description.substring(0, 60) + '...' : '');
-
-        row.innerHTML = `
-            <td>
-                <div class="event-info">
-                    <strong>${this.escapeHtml(event.title)}</strong>
-                    ${event.featured ? '<i class="fas fa-star featured"></i>' : ''}
-                    <div class="event-desc">${this.escapeHtml(description)}</div>
-                </div>
-            </td>
-            <td>
-                <span class="badge category-${event.category}">
-                    ${categoryFormatted}
-                </span>
-            </td>
-            <td>
-                <span class="badge status-${event.status}">
-                    ${statusFormatted}
-                </span>
-            </td>
-            <td>
-                <div class="date-time">
-                    ${eventDate}
-                    <div class="time">${event.startTime || ''}</div>
-                </div>
-            </td>
-            <td>
-                <span class="badge type-${event.eventType}">
-                    ${typeFormatted}
-                </span>
-            </td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-sm btn-edit" data-id="${event._id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-duplicate" data-id="${event._id}">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                    <button class="btn btn-sm btn-delete" data-id="${event._id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        
-        return row;
+                return `
+                <tr data-id="${e._id}">
+                    <td>
+                        <div class="event-info">
+                            <strong>${this.escapeHtml(e.title)}</strong>
+                            ${
+                                e.featured
+                                    ? '<i class="fas fa-star featured" title="Featured"></i>'
+                                    : ''
+                            }
+                            ${
+                                e.recurring?.isRecurring
+                                    ? '<i class="fas fa-sync-alt recurring-badge" title="Recurring"></i>'
+                                    : ''
+                            }
+                            ${
+                                e.registration?.isRequired
+                                    ? '<i class="fas fa-ticket-alt registration-badge" title="Registration"></i>'
+                                    : ''
+                            }
+                            <div class="event-desc">${this.escapeHtml(desc)}</div>
+                        </div>
+                    </td>
+                    <td><span class="badge category-${e.category}">${cat}</span></td>
+                    <td><span class="badge status-${e.status}">${status}</span></td>
+                    <td><div class="date-time">${date}<div class="time">${
+                    e.startTime || ''
+                }</div></div></td>
+                    <td><span class="badge type-${e.eventType}">${type}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-edit" data-id="${
+                                e._id
+                            }" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-duplicate" data-id="${
+                                e._id
+                            }" title="Duplicate"><i class="fas fa-copy"></i></button>
+                            <button class="btn btn-sm btn-delete" data-id="${
+                                e._id
+                            }" title="Delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            })
+            .join('');
     }
 
     filterEvents() {
@@ -899,33 +1219,15 @@ class EventManager {
         const category = document.getElementById('filter-category').value;
         const status = document.getElementById('filter-status').value;
 
-        const rows = document.querySelectorAll('#events-table tr[data-id]');
-        
-        rows.forEach(row => {
-            const eventId = row.dataset.id;
-            const event = this.events.find(e => e._id === eventId);
-            
+        document.querySelectorAll('#events-table tr[data-id]').forEach((row) => {
+            const event = this.events.find((e) => e._id === row.dataset.id);
             if (!event) return;
 
             let show = true;
-
-            // Search filter
-            if (search) {
-                const searchText = `${event.title} ${event.description} ${event.shortDescription || ''}`.toLowerCase();
-                if (!searchText.includes(search)) {
-                    show = false;
-                }
-            }
-
-            // Category filter
-            if (category && event.category !== category) {
+            if (search && !`${event.title} ${event.description}`.toLowerCase().includes(search))
                 show = false;
-            }
-
-            // Status filter
-            if (status && event.status !== status) {
-                show = false;
-            }
+            if (category && event.category !== category) show = false;
+            if (status && event.status !== status) show = false;
 
             row.style.display = show ? '' : 'none';
         });
@@ -934,27 +1236,21 @@ class EventManager {
     updateStats() {
         const stats = {
             total: this.events.length,
-            published: this.events.filter(e => e.status === 'published').length,
-            upcoming: this.events.filter(e => 
-                e.status === 'published' && new Date(e.eventDate) > new Date()
+            published: this.events.filter((e) => e.status === 'published').length,
+            upcoming: this.events.filter(
+                (e) => e.status === 'published' && new Date(e.eventDate) > new Date()
             ).length,
-            draft: this.events.filter(e => e.status === 'draft').length
+            draft: this.events.filter((e) => e.status === 'draft').length,
         };
 
-        // Update stat numbers in DOM
-        const statElements = document.querySelectorAll('.stat-number');
-        if (statElements[0]) statElements[0].textContent = stats.total;
-        if (statElements[1]) statElements[1].textContent = stats.published;
-        if (statElements[2]) statElements[2].textContent = stats.upcoming;
-        if (statElements[3]) statElements[3].textContent = stats.draft;
+        document.querySelectorAll('.stat-number').forEach((el, i) => {
+            el.textContent = [stats.total, stats.published, stats.upcoming, stats.draft][i] || 0;
+        });
     }
 
-    formatCategory(category) {
-        return category.split('-').map(word => 
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' ');
-    }
-
+    // ========================================
+    // Utilities
+    // ========================================
     escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -964,49 +1260,32 @@ class EventManager {
 
     showNotification(message, type = 'info') {
         const colors = {
-            'error': '#ef4444',
-            'success': '#58ba46',
-            'info': '#0f4f9f',
-            'warning': '#f59e0b'
+            error: '#ef4444',
+            success: '#10b981',
+            info: '#0f4f9f',
+            warning: '#f59e0b',
         };
-
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            background: ${colors[type]};
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-            z-index: 1001;
-            transform: translateX(100%);
+        const notif = document.createElement('div');
+        notif.style.cssText = `
+            position: fixed; top: 1.5rem; right: 1.5rem;
+            background: ${colors[type]}; color: white;
+            padding: 0.875rem 1.25rem; border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 2000; transform: translateX(120%);
             transition: transform 0.3s ease;
-            max-width: 350px;
-            font-size: 0.875rem;
-            font-weight: 600;
+            font-size: 0.875rem; font-weight: 500; max-width: 320px;
         `;
-        notification.textContent = message;
+        notif.textContent = message;
+        document.body.appendChild(notif);
 
-        document.body.appendChild(notification);
-
+        setTimeout(() => (notif.style.transform = 'translateX(0)'), 50);
         setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-        }, 100);
-
-        setTimeout(() => {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 5000);
+            notif.style.transform = 'translateX(120%)';
+            setTimeout(() => notif.remove(), 300);
+        }, 4000);
     }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.eventManager = new EventManager();
 });
