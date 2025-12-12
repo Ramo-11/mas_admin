@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Event Management Dashboard</title>
         <link rel="stylesheet" href="/css/admin-dashboard.css" />
+        <link rel="stylesheet" href="/css/registrations.css" />
         <link
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
@@ -12,6 +13,16 @@
     </head>
     <body>
         <div class="container">
+            <!-- Navigation -->
+            <nav class="nav-tabs">
+                <a href="/" class="nav-tab active">
+                    <i class="fas fa-calendar-alt"></i> Events
+                </a>
+                <a href="/registrations" class="nav-tab">
+                    <i class="fas fa-users"></i> Registrations
+                </a>
+            </nav>
+
             <!-- Header -->
             <div class="header">
                 <h1><i class="fas fa-calendar-check"></i> Event Management Dashboard</h1>
@@ -747,6 +758,115 @@
                                         </div>
 
                                         <div id="registration-fields-container"></div>
+                                    </div>
+
+                                    <!-- Waiver/Consent Section -->
+                                    <div class="waiver-section">
+                                        <div class="toggle-row">
+                                            <label class="toggle-switch">
+                                                <input
+                                                    type="checkbox"
+                                                    id="waiverEnabled"
+                                                    name="waiverEnabled"
+                                                />
+                                                <span class="slider"></span>
+                                            </label>
+                                            <div class="toggle-content">
+                                                <strong>Require Waiver/Consent</strong>
+                                                <span>Attendees must acknowledge terms and sign</span>
+                                            </div>
+                                        </div>
+
+                                        <div id="waiver-details" style="display: none">
+                                            <div class="form-group">
+                                                <label for="waiverTitle">Section Title</label>
+                                                <input
+                                                    type="text"
+                                                    id="waiverTitle"
+                                                    name="waiverTitle"
+                                                    value="Terms & Acknowledgments"
+                                                    placeholder="e.g., Terms & Conditions"
+                                                />
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="waiverDescription">Description <span class="label-hint">(Optional)</span></label>
+                                                <textarea
+                                                    id="waiverDescription"
+                                                    name="waiverDescription"
+                                                    rows="2"
+                                                    placeholder="Brief introduction to the waiver section..."
+                                                ></textarea>
+                                            </div>
+
+                                            <!-- Acknowledgments Builder -->
+                                            <div class="acknowledgments-builder">
+                                                <div class="form-builder-header">
+                                                    <div>
+                                                        <strong>Acknowledgment Checkboxes</strong>
+                                                        <span class="hint">Items registrants must agree to</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        id="add-acknowledgment"
+                                                        class="btn btn-sm btn-secondary"
+                                                    >
+                                                        <i class="fas fa-plus"></i> Add Item
+                                                    </button>
+                                                </div>
+                                                <div id="acknowledgments-container"></div>
+                                            </div>
+
+                                            <!-- Signature Settings -->
+                                            <div class="signature-settings">
+                                                <div class="toggle-row compact">
+                                                    <label class="toggle-switch small">
+                                                        <input
+                                                            type="checkbox"
+                                                            id="signatureRequired"
+                                                            name="signatureRequired"
+                                                        />
+                                                        <span class="slider"></span>
+                                                    </label>
+                                                    <div class="toggle-content">
+                                                        <strong>Require Signature</strong>
+                                                        <span>Registrants must sign to complete registration</span>
+                                                    </div>
+                                                </div>
+
+                                                <div id="signature-options" style="display: none">
+                                                    <div class="form-group">
+                                                        <label>Signature Type</label>
+                                                        <div class="signature-type-selector">
+                                                            <label class="pill selected">
+                                                                <input type="radio" name="signatureType" value="both" checked />
+                                                                Both
+                                                            </label>
+                                                            <label class="pill">
+                                                                <input type="radio" name="signatureType" value="draw" />
+                                                                Draw Only
+                                                            </label>
+                                                            <label class="pill">
+                                                                <input type="radio" name="signatureType" value="type" />
+                                                                Type Only
+                                                            </label>
+                                                        </div>
+                                                        <small>Choose how registrants can sign</small>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label for="signatureLegalText">Legal Text</label>
+                                                        <textarea
+                                                            id="signatureLegalText"
+                                                            name="signatureLegalText"
+                                                            rows="2"
+                                                            placeholder="By signing below, I acknowledge that I have read and agree to all the terms above."
+                                                            value="By signing below, I acknowledge that I have read and agree to all the terms above."
+                                                        ></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

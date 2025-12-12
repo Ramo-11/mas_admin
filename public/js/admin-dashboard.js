@@ -7,6 +7,7 @@ class EventManager {
         this.featuredImage = null;
         this.registrationFields = [];
         this.customDates = [];
+        this.acknowledgments = [];
         this.init();
     }
 
@@ -23,6 +24,7 @@ class EventManager {
         this.initCharCounters();
         this.initFieldModal();
         this.initCustomDates();
+        this.initWaiverSection();
     }
 
     // ========================================
@@ -390,6 +392,118 @@ class EventManager {
                 </button>
             `;
             container.appendChild(item);
+        });
+    }
+
+    // ========================================
+    // Waiver/Consent Section
+    // ========================================
+    initWaiverSection() {
+        const waiverToggle = document.getElementById('waiverEnabled');
+        const waiverDetails = document.getElementById('waiver-details');
+        const signatureToggle = document.getElementById('signatureRequired');
+        const signatureOptions = document.getElementById('signature-options');
+        const addAckBtn = document.getElementById('add-acknowledgment');
+
+        // Waiver toggle
+        if (waiverToggle && waiverDetails) {
+            waiverToggle.addEventListener('change', () => {
+                waiverDetails.style.display = waiverToggle.checked ? 'block' : 'none';
+            });
+        }
+
+        // Signature toggle
+        if (signatureToggle && signatureOptions) {
+            signatureToggle.addEventListener('change', () => {
+                signatureOptions.style.display = signatureToggle.checked ? 'block' : 'none';
+            });
+        }
+
+        // Add acknowledgment button
+        if (addAckBtn) {
+            addAckBtn.addEventListener('click', () => {
+                this.addAcknowledgment();
+            });
+        }
+
+        // Signature type selector
+        const signatureTypePills = document.querySelectorAll('.signature-type-selector .pill');
+        signatureTypePills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                signatureTypePills.forEach(p => p.classList.remove('selected'));
+                pill.classList.add('selected');
+            });
+        });
+
+        // Remove acknowledgment delegation
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-ack-btn')) {
+                const item = e.target.closest('.acknowledgment-item');
+                const index = parseInt(item.dataset.index);
+                this.acknowledgments.splice(index, 1);
+                this.renderAcknowledgments();
+            }
+        });
+    }
+
+    addAcknowledgment(data = {}) {
+        this.acknowledgments.push({
+            text: data.text || '',
+            required: data.required !== false,
+        });
+        this.renderAcknowledgments();
+
+        // Focus the new textarea
+        setTimeout(() => {
+            const textareas = document.querySelectorAll('.acknowledgment-item .ack-text');
+            if (textareas.length > 0) {
+                textareas[textareas.length - 1].focus();
+            }
+        }, 50);
+    }
+
+    renderAcknowledgments() {
+        const container = document.getElementById('acknowledgments-container');
+        if (!container) return;
+
+        container.innerHTML = this.acknowledgments.map((ack, index) => `
+            <div class="acknowledgment-item" data-index="${index}">
+                <div class="drag-handle">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                <div class="ack-content">
+                    <textarea
+                        class="ack-text"
+                        placeholder="Enter acknowledgment text (e.g., I understand that submitting this form does not guarantee acceptance...)"
+                        data-index="${index}"
+                    >${this.escapeHtml(ack.text)}</textarea>
+                    <div class="ack-options">
+                        <label class="ack-required">
+                            <input type="checkbox" ${ack.required ? 'checked' : ''} data-index="${index}" class="ack-required-checkbox" />
+                            Required
+                        </label>
+                    </div>
+                </div>
+                <button type="button" class="remove-ack-btn" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `).join('');
+
+        // Bind text change events
+        container.querySelectorAll('.ack-text').forEach(textarea => {
+            textarea.addEventListener('input', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.acknowledgments[index].text = e.target.value;
+            });
+        });
+
+        // Bind required checkbox events
+        container.querySelectorAll('.ack-required-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const index = parseInt(e.target.dataset.index);
+                this.acknowledgments[index].required = e.target.checked;
+            });
         });
     }
 
@@ -791,6 +905,20 @@ class EventManager {
         this.registrationFields = [];
         this.renderRegistrationFields();
 
+        // Reset waiver
+        document.getElementById('waiver-details').style.display = 'none';
+        document.getElementById('waiverEnabled').checked = false;
+        document.getElementById('signatureRequired').checked = false;
+        document.getElementById('signature-options').style.display = 'none';
+        document.getElementById('waiverTitle').value = 'Terms & Acknowledgments';
+        document.getElementById('waiverDescription').value = '';
+        document.getElementById('signatureLegalText').value = '';
+        document.querySelectorAll('.signature-type-selector .pill').forEach((p, i) => {
+            p.classList.toggle('selected', i === 0);
+        });
+        this.acknowledgments = [];
+        this.renderAcknowledgments();
+
         // Reset images
         this.featuredImage = null;
         this.uploadedImages = [];
@@ -939,6 +1067,40 @@ class EventManager {
 
             this.registrationFields = event.registration.fields || [];
             this.renderRegistrationFields();
+
+            // Waiver/Consent
+            if (event.registration.waiver) {
+                const waiver = event.registration.waiver;
+                document.getElementById('waiverEnabled').checked = waiver.enabled || false;
+                document.getElementById('waiver-details').style.display = waiver.enabled ? 'block' : 'none';
+                document.getElementById('waiverTitle').value = waiver.title || 'Terms & Acknowledgments';
+                document.getElementById('waiverDescription').value = waiver.description || '';
+
+                // Acknowledgments
+                this.acknowledgments = (waiver.acknowledgments || []).map(a => ({
+                    text: a.text || '',
+                    required: a.required !== false,
+                }));
+                this.renderAcknowledgments();
+
+                // Signature
+                if (waiver.signature) {
+                    document.getElementById('signatureRequired').checked = waiver.signature.required || false;
+                    document.getElementById('signature-options').style.display = waiver.signature.required ? 'block' : 'none';
+                    document.getElementById('signatureLegalText').value = waiver.signature.legalText || '';
+
+                    // Set signature type pill
+                    const sigType = waiver.signature.type || 'both';
+                    document.querySelectorAll('.signature-type-selector .pill').forEach(p => {
+                        const isSelected = p.querySelector('input').value === sigType;
+                        p.classList.toggle('selected', isSelected);
+                        p.querySelector('input').checked = isSelected;
+                    });
+                }
+            } else {
+                this.acknowledgments = [];
+                this.renderAcknowledgments();
+            }
         }
 
         // Media
@@ -1037,6 +1199,22 @@ class EventManager {
             waitlistEnabled: formData.has('waitlistEnabled'),
             fields: this.registrationFields,
             isOpen: true,
+            // Waiver/Consent
+            waiver: {
+                enabled: formData.has('waiverEnabled'),
+                title: formData.get('waiverTitle') || 'Terms & Acknowledgments',
+                description: formData.get('waiverDescription') || '',
+                acknowledgments: this.acknowledgments.filter(a => a.text.trim()).map((a, i) => ({
+                    text: a.text,
+                    required: a.required,
+                    order: i,
+                })),
+                signature: {
+                    required: formData.has('signatureRequired'),
+                    type: document.querySelector('.signature-type-selector .pill.selected input')?.value || 'both',
+                    legalText: formData.get('signatureLegalText') || 'By signing below, I acknowledge that I have read and agree to all the terms and conditions above.',
+                },
+            },
         };
 
         // Tags

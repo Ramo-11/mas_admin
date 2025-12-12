@@ -1,0 +1,666 @@
+/* ========================================
+   Navigation Tabs
+   ======================================== */
+.nav-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.nav-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.nav-tab:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.nav-tab.active {
+    background: linear-gradient(135deg, #0f4f9f, #1e40af);
+    color: white;
+}
+
+.nav-tab i {
+    font-size: 1rem;
+}
+
+/* ========================================
+   Stat Card Variants
+   ======================================== */
+.stat-icon.stat-confirmed {
+    background: linear-gradient(135deg, #059669, #10b981);
+}
+
+.stat-icon.stat-pending {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+}
+
+.stat-icon.stat-waitlist {
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+}
+
+/* ========================================
+   Enhanced Actions Bar
+   ======================================== */
+.bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    margin-right: auto;
+}
+
+.selected-count {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #0369a1;
+}
+
+.btn-confirm-bulk {
+    background: #10b981;
+    color: white;
+}
+
+.btn-confirm-bulk:hover {
+    background: #059669;
+}
+
+.btn-cancel-bulk {
+    background: #f87171;
+    color: white;
+}
+
+.btn-cancel-bulk:hover {
+    background: #ef4444;
+}
+
+.search-wide {
+    width: 280px;
+}
+
+/* ========================================
+   Checkbox Styling
+   ======================================== */
+.checkbox-col {
+    width: 40px;
+    text-align: center;
+}
+
+.checkbox-container {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 18px;
+    width: 18px;
+    background: white;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+
+.checkbox-container:hover .checkmark {
+    border-color: #0f4f9f;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background: #0f4f9f;
+    border-color: #0f4f9f;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+/* ========================================
+   Registrations Table
+   ======================================== */
+.registrations-table .registrant-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.registrant-info .email {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.9rem;
+}
+
+.registrant-info .name {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.registrant-info .phone {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.event-link {
+    color: #0f4f9f;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.event-link:hover {
+    text-decoration: underline;
+}
+
+.event-date {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.125rem;
+}
+
+.confirmation-number {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+    font-size: 0.75rem;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* Status badges specific to registrations */
+.status-confirmed,
+.status-pending,
+.status-cancelled,
+.status-waitlisted {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.status-confirmed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-waitlisted {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+/* ========================================
+   Registration Details Modal
+   ======================================== */
+.registration-detail-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.registration-detail-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.detail-section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-section-title i {
+    color: #0f4f9f;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-item.full-width {
+    grid-column: span 2;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 0.9rem;
+    color: #1e293b;
+}
+
+.detail-value.email {
+    color: #0f4f9f;
+}
+
+.detail-value.confirmation {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+    background: #f1f5f9;
+    padding: 0.375rem 0.625rem;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+/* Status selector in modal */
+.status-selector {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.status-option {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.status-option:hover {
+    border-color: #94a3b8;
+}
+
+.status-option.selected {
+    border-color: #0f4f9f;
+    background: #f0f9ff;
+}
+
+.status-option input {
+    display: none;
+}
+
+.status-option i {
+    font-size: 0.75rem;
+}
+
+.status-option.confirmed {
+    color: #166534;
+}
+.status-option.confirmed.selected {
+    background: #dcfce7;
+    border-color: #166534;
+}
+
+.status-option.pending {
+    color: #92400e;
+}
+.status-option.pending.selected {
+    background: #fef3c7;
+    border-color: #92400e;
+}
+
+.status-option.waitlisted {
+    color: #7c3aed;
+}
+.status-option.waitlisted.selected {
+    background: #f3e8ff;
+    border-color: #7c3aed;
+}
+
+.status-option.cancelled {
+    color: #991b1b;
+}
+.status-option.cancelled.selected {
+    background: #fee2e2;
+    border-color: #991b1b;
+}
+
+/* Registration data display */
+.registration-data-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.registration-data-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.registration-data-item .field-name {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.registration-data-item .field-value {
+    font-size: 0.875rem;
+    color: #1e293b;
+}
+
+/* Notes textarea */
+.notes-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.notes-textarea:focus {
+    outline: none;
+    border-color: #0f4f9f;
+    box-shadow: 0 0 0 3px rgba(15, 79, 159, 0.1);
+}
+
+/* ========================================
+   Pagination
+   ======================================== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.pagination:empty {
+    display: none;
+}
+
+.page-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+    color: #475569;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.page-btn:hover:not(:disabled) {
+    border-color: #0f4f9f;
+    color: #0f4f9f;
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-btn.active {
+    background: #0f4f9f;
+    border-color: #0f4f9f;
+    color: white;
+}
+
+.page-info {
+    font-size: 0.8rem;
+    color: #64748b;
+    padding: 0 1rem;
+}
+
+/* ========================================
+   Action Buttons for Registrations
+   ======================================== */
+.btn-view {
+    background: #0f4f9f;
+    color: white;
+}
+
+.btn-view:hover {
+    background: #0a3d7a;
+}
+
+.btn-confirm {
+    background: #10b981;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #059669;
+}
+
+.btn-waitlist {
+    background: #8b5cf6;
+    color: white;
+}
+
+.btn-waitlist:hover {
+    background: #7c3aed;
+}
+
+/* Quick status dropdown */
+.status-dropdown {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.status-dropdown .badge {
+    cursor: pointer;
+}
+
+.status-dropdown-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.65rem;
+    color: #94a3b8;
+    transition: all 0.15s;
+}
+
+.status-dropdown-btn:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.status-dropdown-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    min-width: 150px;
+    display: none;
+    overflow: hidden;
+}
+
+.status-dropdown-menu.show {
+    display: block;
+}
+
+.status-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8rem;
+    color: #475569;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.status-dropdown-item:hover {
+    background: #f8fafc;
+}
+
+.status-dropdown-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.status-dropdown-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.status-dropdown-item i {
+    width: 1rem;
+    text-align: center;
+}
+
+.status-dropdown-item.confirmed { color: #166534; }
+.status-dropdown-item.pending { color: #92400e; }
+.status-dropdown-item.waitlisted { color: #7c3aed; }
+.status-dropdown-item.cancelled { color: #991b1b; }
+
+/* ========================================
+   Empty & Loading States
+   ======================================== */
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+}
+
+.loading-spinner i {
+    font-size: 2rem;
+    color: #0f4f9f;
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+@media (max-width: 1024px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-item.full-width {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-tabs {
+        flex-direction: column;
+    }
+
+    .bulk-actions {
+        flex-wrap: wrap;
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+
+    .search-wide {
+        width: 100%;
+    }
+
+    .registrations-table th:nth-child(5),
+    .registrations-table td:nth-child(5),
+    .registrations-table th:nth-child(6),
+    .registrations-table td:nth-child(6) {
+        display: none;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .registrations-table th:nth-child(3),
+    .registrations-table td:nth-child(3) {
+        display: none;
+    }
+
+    .status-selector {
+        flex-direction: column;
+    }
+
+    .status-option {
+        justify-content: center;
+    }
+}

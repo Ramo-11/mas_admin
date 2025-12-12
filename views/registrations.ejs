@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Registration Management</title>
+        <link rel="stylesheet" href="/css/admin-dashboard.css" />
+        <link rel="stylesheet" href="/css/registrations.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        />
+    </head>
+    <body>
+        <div class="container">
+            <!-- Navigation -->
+            <nav class="nav-tabs">
+                <a href="/" class="nav-tab">
+                    <i class="fas fa-calendar-alt"></i> Events
+                </a>
+                <a href="/registrations" class="nav-tab active">
+                    <i class="fas fa-users"></i> Registrations
+                </a>
+            </nav>
+
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-clipboard-list"></i> Registration Management</h1>
+                <p>View and manage event registrations</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number"><%= stats.total || 0 %></div>
+                        <div class="stat-label">Total Registrations</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-confirmed"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number"><%= stats.confirmed || 0 %></div>
+                        <div class="stat-label">Confirmed</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-pending"><i class="fas fa-clock"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number"><%= stats.pending || 0 %></div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-waitlist"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number"><%= stats.waitlisted || 0 %></div>
+                        <div class="stat-label">Waitlisted</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Bar -->
+            <div class="actions">
+                <div class="bulk-actions" id="bulk-actions" style="display: none;">
+                    <span class="selected-count"><span id="selected-count">0</span> selected</span>
+                    <button class="btn btn-sm btn-confirm-bulk" id="bulk-confirm-btn" title="Confirm Selected">
+                        <i class="fas fa-check"></i> Confirm
+                    </button>
+                    <button class="btn btn-sm btn-cancel-bulk" id="bulk-cancel-btn" title="Cancel Selected">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button class="btn btn-sm btn-secondary" id="clear-selection-btn">
+                        Clear Selection
+                    </button>
+                </div>
+                <div class="filters">
+                    <input
+                        type="text"
+                        id="search"
+                        placeholder="Search by email or confirmation #..."
+                        class="search-input search-wide"
+                    />
+                    <select id="filter-event" class="filter-select">
+                        <option value="">All Events</option>
+                        <% events.forEach(event => { %>
+                        <option value="<%= event._id %>">
+                            <%= event.title.substring(0, 40) %><%= event.title.length > 40 ? '...' : '' %>
+                        </option>
+                        <% }); %>
+                    </select>
+                    <select id="filter-status" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="pending">Pending</option>
+                        <option value="waitlisted">Waitlisted</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button class="btn btn-secondary" id="export-btn" title="Export to CSV">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Registrations Table -->
+            <div class="table-container">
+                <table class="events-table registrations-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-col">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="select-all" />
+                                    <span class="checkmark"></span>
+                                </label>
+                            </th>
+                            <th>Registrant</th>
+                            <th>Event</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                            <th>Confirmation #</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="registrations-table">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div class="empty-content">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <h3>Loading registrations...</h3>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination"></div>
+        </div>
+
+        <!-- View/Edit Registration Modal -->
+        <div class="modal" id="registration-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Registration Details</h2>
+                    <button class="close" id="close-modal">&times;</button>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <!-- Content loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="close-modal-btn">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="save-registration-btn" style="display: none;">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Dialog -->
+        <div class="modal modal-sm" id="confirm-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Confirm Action</h2>
+                    <button class="close" id="close-confirm-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirm-message">Are you sure you want to perform this action?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-confirm-btn">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="proceed-confirm-btn">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/js/registrations.js"></script>
+    </body>
+</html>

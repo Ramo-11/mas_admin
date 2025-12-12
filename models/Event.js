@@ -234,6 +234,55 @@ const eventSchema = new mongoose.Schema(
                 default:
                     'Thank you for registering! You will receive a confirmation email shortly.',
             },
+            // Waiver/Consent section
+            waiver: {
+                enabled: {
+                    type: Boolean,
+                    default: false,
+                },
+                title: {
+                    type: String,
+                    trim: true,
+                    default: 'Terms & Acknowledgments',
+                },
+                description: {
+                    type: String,
+                    trim: true,
+                },
+                acknowledgments: [
+                    {
+                        text: {
+                            type: String,
+                            required: true,
+                            trim: true,
+                        },
+                        required: {
+                            type: Boolean,
+                            default: true,
+                        },
+                        order: {
+                            type: Number,
+                            default: 0,
+                        },
+                    },
+                ],
+                signature: {
+                    required: {
+                        type: Boolean,
+                        default: false,
+                    },
+                    type: {
+                        type: String,
+                        enum: ['draw', 'type', 'both'],
+                        default: 'both',
+                    },
+                    legalText: {
+                        type: String,
+                        trim: true,
+                        default: 'By signing below, I acknowledge that I have read and agree to all the terms and conditions above.',
+                    },
+                },
+            },
         },
         tags: [
             {
