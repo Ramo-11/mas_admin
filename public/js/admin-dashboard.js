@@ -1361,7 +1361,7 @@ class EventManager {
                             }
                             ${
                                 e.registration?.isRequired
-                                    ? '<i class="fas fa-ticket-alt registration-badge" title="Registration"></i>'
+                                    ? '<span class="registration-badge" title="Registration Required"><i class="fas fa-clipboard-check"></i> REG</span>'
                                     : ''
                             }
                             <div class="event-desc">${this.escapeHtml(desc)}</div>

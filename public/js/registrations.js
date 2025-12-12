@@ -95,10 +95,18 @@ class RegistrationManager {
                 this.quickStatusChange(id, 'confirmed');
             }
 
-            if (e.target.closest('.btn-delete')) {
-                const id = e.target.closest('.btn-delete').dataset.id;
+            if (e.target.closest('.btn-cancel')) {
+                const id = e.target.closest('.btn-cancel').dataset.id;
                 this.confirmAction('Cancel this registration?', () => {
                     this.quickStatusChange(id, 'cancelled');
+                });
+            }
+
+            // Permanent delete
+            if (e.target.closest('.btn-delete-permanent')) {
+                const id = e.target.closest('.btn-delete-permanent').dataset.id;
+                this.confirmAction('Permanently delete this registration? This action cannot be undone.', () => {
+                    this.permanentDelete(id);
                 });
             }
 
@@ -346,10 +354,13 @@ class RegistrationManager {
                                 </button>
                             ` : ''}
                             ${reg.status !== 'cancelled' ? `
-                                <button class="btn btn-sm btn-delete" data-id="${reg._id}" title="Cancel">
+                                <button class="btn btn-sm btn-cancel" data-id="${reg._id}" title="Cancel">
                                     <i class="fas fa-times"></i>
                                 </button>
                             ` : ''}
+                            <button class="btn btn-sm btn-delete-permanent" data-id="${reg._id}" title="Delete Permanently">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -518,6 +529,25 @@ class RegistrationManager {
         }
     }
 
+    async permanentDelete(id) {
+        try {
+            const res = await fetch(`/api/registrations/${id}/permanent`, {
+                method: 'DELETE',
+            });
+
+            if (res.ok) {
+                this.showNotification('Registration permanently deleted', 'success');
+                this.loadRegistrations();
+                this.updateStats();
+            } else {
+                const data = await res.json();
+                throw new Error(data.message || 'Delete failed');
+            }
+        } catch (err) {
+            this.showNotification(err.message || 'Failed to delete registration', 'error');
+        }
+    }
+
     async viewRegistration(id) {
         try {
             console.log('Fetching registration with ID:', id);
@@ -635,12 +665,14 @@ class RegistrationManager {
                         ${Object.entries(regData).map(([key, value]) => `
                             <div class="registration-data-item">
                                 <span class="field-name">${this.formatFieldName(key)}</span>
-                                <span class="field-value">${this.escapeHtml(String(value))}</span>
+                                <span class="field-value">${this.formatFieldValue(value)}</span>
                             </div>
                         `).join('')}
                     </div>
                 </div>
             ` : ''}
+
+            ${this.renderWaiverSection(reg)}
 
             <div class="registration-detail-section">
                 <div class="detail-section-title">
@@ -760,6 +792,95 @@ class RegistrationManager {
             .replace(/[_-]/g, ' ')
             .replace(/^\w/, c => c.toUpperCase())
             .trim();
+    }
+
+    formatFieldValue(value) {
+        if (value === null || value === undefined) return '';
+
+        // Handle arrays
+        if (Array.isArray(value)) {
+            return value.map(v => this.escapeHtml(String(v))).join(', ');
+        }
+
+        // Handle objects
+        if (typeof value === 'object') {
+            // Check if it looks like a signature object
+            if (value.type && value.value) {
+                if (value.type === 'draw') {
+                    return `<img src="${value.value}" alt="Signature" class="signature-preview" />`;
+                } else {
+                    return `<span class="typed-signature">${this.escapeHtml(value.value)}</span>`;
+                }
+            }
+            // Generic object - try to display nicely
+            try {
+                const entries = Object.entries(value);
+                if (entries.length === 0) return '';
+                return entries.map(([k, v]) => `${this.formatFieldName(k)}: ${this.escapeHtml(String(v))}`).join(', ');
+            } catch {
+                return this.escapeHtml(String(value));
+            }
+        }
+
+        // Handle booleans
+        if (typeof value === 'boolean') {
+            return value ? '<i class="fas fa-check text-success"></i> Yes' : '<i class="fas fa-times text-muted"></i> No';
+        }
+
+        return this.escapeHtml(String(value));
+    }
+
+    renderWaiverSection(reg) {
+        if (!reg.waiver || !reg.waiver.acknowledged) {
+            return '';
+        }
+
+        const waiver = reg.waiver;
+        let html = `
+            <div class="registration-detail-section">
+                <div class="detail-section-title">
+                    <i class="fas fa-file-signature"></i> Waiver & Consent
+                </div>
+        `;
+
+        // Acknowledgments
+        if (waiver.acknowledgments && waiver.acknowledgments.length > 0) {
+            html += `
+                <div class="waiver-acknowledgments">
+                    <div class="detail-label" style="margin-bottom: 0.5rem;">Acknowledgments</div>
+                    ${waiver.acknowledgments.map(ack => `
+                        <div class="waiver-ack-item ${ack.accepted ? 'accepted' : 'not-accepted'}">
+                            <i class="fas ${ack.accepted ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                            <span>${this.escapeHtml(ack.text)}</span>
+                            ${ack.acceptedAt ? `<small class="ack-date">${new Date(ack.acceptedAt).toLocaleString()}</small>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Signature
+        if (waiver.signature && waiver.signature.value) {
+            const sig = waiver.signature;
+            html += `
+                <div class="waiver-signature">
+                    <div class="detail-label" style="margin-bottom: 0.5rem;">Signature</div>
+                    <div class="signature-display">
+                        ${sig.type === 'draw'
+                            ? `<img src="${sig.value}" alt="Signature" class="signature-image" />`
+                            : `<div class="typed-signature-display">${this.escapeHtml(sig.value)}</div>`
+                        }
+                    </div>
+                    <div class="signature-meta">
+                        ${sig.signedAt ? `<span><i class="fas fa-clock"></i> Signed: ${new Date(sig.signedAt).toLocaleString()}</span>` : ''}
+                        ${sig.ipAddress ? `<span><i class="fas fa-globe"></i> IP: ${this.escapeHtml(sig.ipAddress)}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        return html;
     }
 
     escapeHtml(text) {

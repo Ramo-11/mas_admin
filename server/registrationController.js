@@ -339,31 +339,111 @@ const bulkUpdateStatus = async (req, res) => {
 
 const exportRegistrations = async (req, res) => {
     try {
-        const { eventId, format = 'json' } = req.query;
+        const { eventId, format = 'json', status } = req.query;
 
         const filter = {};
         if (eventId) filter.event = eventId;
+        if (status) filter.status = status;
 
         const registrations = await Registration.find(filter)
-            .populate('event', 'title eventDate')
+            .populate('event', 'title eventDate category')
             .sort({ registeredAt: -1 });
 
         if (format === 'csv') {
-            const headers = ['Confirmation #', 'Email', 'Status', 'Event', 'Registered At', 'Registration Data'];
-            const rows = registrations.map(r => [
-                r.confirmationNumber,
-                r.email,
-                r.status,
-                r.event?.title || 'N/A',
-                new Date(r.registeredAt).toISOString(),
-                JSON.stringify(Object.fromEntries(r.registrationData || new Map())),
-            ]);
+            // Collect all unique field names from registration data
+            const allFields = new Set();
+            registrations.forEach(r => {
+                if (r.registrationData) {
+                    const data = r.registrationData instanceof Map
+                        ? Object.fromEntries(r.registrationData)
+                        : r.registrationData;
+                    Object.keys(data).forEach(key => allFields.add(key));
+                }
+            });
+            const dynamicFields = Array.from(allFields);
 
-            const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
+            // Build headers
+            const headers = [
+                'Confirmation #',
+                'Email',
+                'Status',
+                'Event',
+                'Event Date',
+                'Category',
+                'Registered At',
+                'Waitlisted',
+                ...dynamicFields.map(f => formatFieldName(f)),
+                'Waiver Acknowledged',
+                'Signature Type',
+                'Signed At',
+                'IP Address',
+            ];
 
-            res.setHeader('Content-Type', 'text/csv');
-            res.setHeader('Content-Disposition', `attachment; filename=registrations-${Date.now()}.csv`);
-            return res.send(csv);
+            // Build rows
+            const rows = registrations.map(r => {
+                const regData = r.registrationData instanceof Map
+                    ? Object.fromEntries(r.registrationData)
+                    : (r.registrationData || {});
+
+                const eventDate = r.event?.eventDate
+                    ? new Date(r.event.eventDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    })
+                    : '';
+
+                const row = [
+                    r.confirmationNumber,
+                    r.email,
+                    r.status,
+                    r.event?.title || 'N/A',
+                    eventDate,
+                    r.event?.category || '',
+                    new Date(r.registeredAt).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                    }),
+                    r.isWaitlisted ? 'Yes' : 'No',
+                ];
+
+                // Add dynamic fields
+                dynamicFields.forEach(field => {
+                    const value = regData[field];
+                    row.push(formatCellValue(value));
+                });
+
+                // Add waiver info
+                row.push(r.waiver?.acknowledged ? 'Yes' : 'No');
+                row.push(r.waiver?.signature?.type || '');
+                row.push(r.waiver?.signature?.signedAt
+                    ? new Date(r.waiver.signature.signedAt).toLocaleString('en-US')
+                    : '');
+                row.push(r.waiver?.signature?.ipAddress || r.metadata?.ipAddress || '');
+
+                return row;
+            });
+
+            // Generate CSV with BOM for Excel compatibility
+            const BOM = '\uFEFF';
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row =>
+                    row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')
+                )
+            ].join('\n');
+
+            const eventName = registrations[0]?.event?.title
+                ? `-${registrations[0].event.title.replace(/[^a-z0-9]/gi, '_').substring(0, 30)}`
+                : '';
+            const filename = `registrations${eventName}-${new Date().toISOString().split('T')[0]}.csv`;
+
+            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            return res.send(BOM + csvContent);
         }
 
         return res.status(200).json({ registrations });
@@ -372,6 +452,48 @@ const exportRegistrations = async (req, res) => {
         return res.status(500).json({ message: 'Error exporting registrations' });
     }
 };
+
+// Helper function to format field names for CSV headers
+function formatFieldName(name) {
+    return name
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/[_-]/g, ' ')
+        .replace(/^\w/, c => c.toUpperCase())
+        .trim();
+}
+
+// Helper function to format cell values for CSV
+function formatCellValue(value) {
+    if (value === null || value === undefined) return '';
+
+    if (Array.isArray(value)) {
+        return value.join('; ');
+    }
+
+    if (typeof value === 'object') {
+        // Skip signature data (base64 images)
+        if (value.type === 'draw' && value.value?.startsWith('data:')) {
+            return '[Signature Image]';
+        }
+        if (value.type === 'type' && value.value) {
+            return value.value;
+        }
+        // For other objects, try to flatten
+        try {
+            return Object.entries(value)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join('; ');
+        } catch {
+            return String(value);
+        }
+    }
+
+    if (typeof value === 'boolean') {
+        return value ? 'Yes' : 'No';
+    }
+
+    return String(value);
+}
 
 module.exports = {
     getRegistrations,

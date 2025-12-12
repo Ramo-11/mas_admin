@@ -128,10 +128,10 @@
                                         title="Recurring"
                                     ></i
                                     ><% } %> <% if (event.registration &&
-                                    event.registration.isRequired) { %><i
-                                        class="fas fa-ticket-alt registration-badge"
+                                    event.registration.isRequired) { %><span
+                                        class="registration-badge"
                                         title="Registration Required"
-                                    ></i
+                                    ><i class="fas fa-clipboard-check"></i> REG</span
                                     ><% } %>
                                     <div class="event-desc">
                                         <%= event.shortDescription || (event.description ?
