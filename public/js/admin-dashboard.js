@@ -25,6 +25,7 @@ class EventManager {
         this.initFieldModal();
         this.initCustomDates();
         this.initWaiverSection();
+        this.renderRegistrationFields(); // Initialize empty state
     }
 
     // ========================================
@@ -253,12 +254,17 @@ class EventManager {
         const closeBtn = document.getElementById('close-field-modal');
         const cancelBtn = document.getElementById('cancel-field-btn');
         const saveBtn = document.getElementById('save-field-btn');
-        const typeCards = document.querySelectorAll('.field-type-card');
+        const typeCards = modal.querySelectorAll('.field-type-card');
         const optionsGroup = document.getElementById('fieldOptionsGroup');
+
+        this.editingFieldIndex = null; // Track if we're editing an existing field
 
         if (addBtn) {
             addBtn.addEventListener('click', () => {
+                this.editingFieldIndex = null;
                 this.resetFieldModal();
+                document.getElementById('field-modal-title').textContent = 'Add Field';
+                document.getElementById('save-field-btn').innerHTML = '<i class="fas fa-plus"></i> Add Field';
                 modal.classList.add('show');
             });
         }
@@ -292,31 +298,108 @@ class EventManager {
         // Remove field delegation
         document.addEventListener('click', (e) => {
             if (e.target.closest('.remove-field-btn')) {
-                const item = e.target.closest('.custom-field-item');
-                const index = parseInt(item.dataset.index);
+                const btn = e.target.closest('.remove-field-btn');
+                const index = parseInt(btn.dataset.index);
                 this.registrationFields.splice(index, 1);
                 this.renderRegistrationFields();
+                this.showNotification('Field removed', 'success');
             }
+
+            // Edit field delegation
+            if (e.target.closest('.edit-field-btn')) {
+                const btn = e.target.closest('.edit-field-btn');
+                const index = parseInt(btn.dataset.index);
+                this.editField(index);
+            }
+        });
+
+        // Quick add buttons
+        document.querySelectorAll('.quick-add-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                if (btn.classList.contains('added')) return;
+                const fieldType = btn.dataset.field;
+                this.addQuickField(fieldType);
+            });
         });
     }
 
+    addQuickField(fieldType) {
+        const quickFields = {
+            fullName: { name: 'Full Name', type: 'text', placeholder: 'Enter your full name', required: true },
+            email: { name: 'Email', type: 'email', placeholder: 'Enter your email address', required: true },
+            phone: { name: 'Phone', type: 'text', placeholder: 'Enter your phone number', required: false },
+        };
+
+        const field = quickFields[fieldType];
+        if (!field) return;
+
+        // Check if already added
+        const exists = this.registrationFields.some(
+            (f) => f.name.toLowerCase() === field.name.toLowerCase()
+        );
+        if (exists) {
+            this.showNotification(`${field.name} field already exists`, 'warning');
+            return;
+        }
+
+        this.registrationFields.push({ ...field, options: [] });
+        this.renderRegistrationFields();
+        this.showNotification(`${field.name} field added`, 'success');
+    }
+
     resetFieldModal() {
+        const fieldModal = document.getElementById('field-modal');
         document.getElementById('newFieldLabel').value = '';
         document.getElementById('newFieldPlaceholder').value = '';
         document.getElementById('newFieldOptions').value = '';
         document.getElementById('newFieldRequired').checked = false;
         document.getElementById('fieldOptionsGroup').style.display = 'none';
 
-        const typeCards = document.querySelectorAll('.field-type-card');
+        const typeCards = fieldModal.querySelectorAll('.field-type-card');
         typeCards.forEach((c, i) => {
             c.classList.toggle('selected', i === 0);
+            c.querySelector('input').checked = i === 0;
         });
-        document.querySelector('input[name="newFieldType"][value="text"]').checked = true;
+    }
+
+    editField(index) {
+        const field = this.registrationFields[index];
+        if (!field) return;
+
+        this.editingFieldIndex = index;
+
+        // Populate the modal with field data
+        document.getElementById('newFieldLabel').value = field.name || '';
+        document.getElementById('newFieldPlaceholder').value = field.placeholder || '';
+        document.getElementById('newFieldRequired').checked = field.required || false;
+
+        // Set field type
+        const fieldModal = document.getElementById('field-modal');
+        const typeCards = fieldModal.querySelectorAll('.field-type-card');
+        typeCards.forEach((card) => {
+            const input = card.querySelector('input');
+            const isSelected = input.value === field.type;
+            card.classList.toggle('selected', isSelected);
+            input.checked = isSelected;
+        });
+
+        // Show options if needed
+        const needsOptions = ['select', 'radio', 'checkbox'].includes(field.type);
+        document.getElementById('fieldOptionsGroup').style.display = needsOptions ? 'block' : 'none';
+        document.getElementById('newFieldOptions').value = (field.options || []).join('\n');
+
+        // Update modal title and button
+        document.getElementById('field-modal-title').textContent = 'Edit Field';
+        document.getElementById('save-field-btn').innerHTML = '<i class="fas fa-save"></i> Save Changes';
+
+        fieldModal.classList.add('show');
     }
 
     saveRegistrationField() {
+        const fieldModal = document.getElementById('field-modal');
         const label = document.getElementById('newFieldLabel').value.trim();
-        const type = document.querySelector('input[name="newFieldType"]:checked').value;
+        const typeInput = fieldModal.querySelector('input[name="newFieldType"]:checked');
+        const type = typeInput ? typeInput.value : 'text';
         const placeholder = document.getElementById('newFieldPlaceholder').value.trim();
         const required = document.getElementById('newFieldRequired').checked;
         const optionsText = document.getElementById('newFieldOptions').value.trim();
@@ -329,6 +412,17 @@ class EventManager {
         if (['select', 'radio', 'checkbox'].includes(type) && !optionsText) {
             this.showNotification('Please enter options for this field type', 'error');
             return;
+        }
+
+        // Check for duplicate field names (only when adding, not editing)
+        if (this.editingFieldIndex === null) {
+            const exists = this.registrationFields.some(
+                (f) => f.name.toLowerCase() === label.toLowerCase()
+            );
+            if (exists) {
+                this.showNotification(`A field named "${label}" already exists`, 'error');
+                return;
+            }
         }
 
         const field = {
@@ -344,14 +438,24 @@ class EventManager {
                 : [],
         };
 
-        this.registrationFields.push(field);
+        if (this.editingFieldIndex !== null) {
+            // Update existing field
+            this.registrationFields[this.editingFieldIndex] = field;
+            this.showNotification('Field updated successfully', 'success');
+        } else {
+            // Add new field
+            this.registrationFields.push(field);
+            this.showNotification('Field added successfully', 'success');
+        }
+
+        this.editingFieldIndex = null;
         this.renderRegistrationFields();
         document.getElementById('field-modal').classList.remove('show');
-        this.showNotification('Field added successfully', 'success');
     }
 
     renderRegistrationFields() {
         const container = document.getElementById('registration-fields-container');
+        const emptyMessage = document.getElementById('empty-fields-message');
         container.innerHTML = '';
 
         const typeIcons = {
@@ -380,18 +484,104 @@ class EventManager {
             const item = document.createElement('div');
             item.className = 'custom-field-item';
             item.dataset.index = index;
+            item.draggable = true;
             item.innerHTML = `
+                <div class="drag-handle" title="Drag to reorder">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
                 <div class="custom-field-info">
                     <i class="fas ${typeIcons[field.type] || 'fa-font'}"></i>
                     <strong>${this.escapeHtml(field.name)}</strong>
                     <span class="field-type-badge">${typeLabels[field.type] || field.type}</span>
                     ${field.required ? '<span class="req-badge">*</span>' : ''}
                 </div>
-                <button type="button" class="remove-field-btn" title="Remove field">
-                    <i class="fas fa-times"></i>
-                </button>
+                <div class="field-actions">
+                    <button type="button" class="edit-field-btn" title="Edit field" data-index="${index}">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button type="button" class="remove-field-btn" title="Remove field" data-index="${index}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             `;
             container.appendChild(item);
+        });
+
+        // Initialize drag and drop
+        this.initFieldDragDrop();
+
+        // Update empty message visibility
+        if (emptyMessage) {
+            emptyMessage.classList.toggle('hidden', this.registrationFields.length > 0);
+        }
+
+        // Update quick-add button states
+        this.updateQuickAddButtons();
+    }
+
+    initFieldDragDrop() {
+        const container = document.getElementById('registration-fields-container');
+        const items = container.querySelectorAll('.custom-field-item');
+
+        items.forEach((item) => {
+            item.addEventListener('dragstart', (e) => {
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', item.dataset.index);
+            });
+
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
+                container.querySelectorAll('.custom-field-item').forEach((i) => i.classList.remove('drag-over'));
+            });
+
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const dragging = container.querySelector('.dragging');
+                if (dragging && dragging !== item) {
+                    item.classList.add('drag-over');
+                }
+            });
+
+            item.addEventListener('dragleave', () => {
+                item.classList.remove('drag-over');
+            });
+
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                item.classList.remove('drag-over');
+                const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                const toIndex = parseInt(item.dataset.index);
+
+                if (fromIndex !== toIndex) {
+                    const [movedField] = this.registrationFields.splice(fromIndex, 1);
+                    this.registrationFields.splice(toIndex, 0, movedField);
+                    this.renderRegistrationFields();
+                }
+            });
+        });
+    }
+
+    updateQuickAddButtons() {
+        const quickFieldNames = {
+            fullName: 'Full Name',
+            email: 'Email',
+            phone: 'Phone',
+        };
+
+        document.querySelectorAll('.quick-add-btn').forEach((btn) => {
+            const fieldType = btn.dataset.field;
+            const fieldName = quickFieldNames[fieldType];
+            const exists = this.registrationFields.some(
+                (f) => f.name.toLowerCase() === fieldName.toLowerCase()
+            );
+            btn.classList.toggle('added', exists);
+            if (exists) {
+                btn.innerHTML = `<i class="fas fa-check"></i> ${fieldName}`;
+            } else {
+                const icons = { fullName: 'fa-user', email: 'fa-envelope', phone: 'fa-phone' };
+                btn.innerHTML = `<i class="fas ${icons[fieldType]}"></i> ${fieldName}`;
+            }
         });
     }
 
@@ -902,8 +1092,19 @@ class EventManager {
 
         // Reset registration
         document.getElementById('registration-details').style.display = 'none';
+        document.getElementById('isRegistrationRequired').checked = false;
+        document.getElementById('maxAttendees').value = '';
+        document.getElementById('registrationFee').value = '';
+        document.getElementById('waitlistEnabled').checked = false;
+        document.getElementById('registrationDeadline').value = '';
         this.registrationFields = [];
         this.renderRegistrationFields();
+
+        // Close registration accordion
+        const registrationAccordion = document.getElementById('registration-details')?.closest('.accordion-section');
+        if (registrationAccordion) {
+            registrationAccordion.classList.remove('open');
+        }
 
         // Reset waiver
         document.getElementById('waiver-details').style.display = 'none';
@@ -1052,6 +1253,15 @@ class EventManager {
                 .isRequired
                 ? 'block'
                 : 'none';
+
+            // Expand the registration accordion if registration is required
+            if (event.registration.isRequired) {
+                const registrationAccordion = document.getElementById('registration-details')?.closest('.accordion-section');
+                if (registrationAccordion) {
+                    registrationAccordion.classList.add('open');
+                }
+            }
+
             document.getElementById('maxAttendees').value = event.registration.maxAttendees || '';
             document.getElementById('registrationFee').value = event.registration.fee?.amount || '';
             document.getElementById('waitlistEnabled').checked =
@@ -1073,6 +1283,14 @@ class EventManager {
                 const waiver = event.registration.waiver;
                 document.getElementById('waiverEnabled').checked = waiver.enabled || false;
                 document.getElementById('waiver-details').style.display = waiver.enabled ? 'block' : 'none';
+
+                // Expand waiver section if waiver is enabled
+                if (waiver.enabled) {
+                    const waiverSection = document.getElementById('waiver-details')?.closest('.waiver-section');
+                    if (waiverSection) {
+                        waiverSection.classList.add('open');
+                    }
+                }
                 document.getElementById('waiverTitle').value = waiver.title || 'Terms & Acknowledgments';
                 document.getElementById('waiverDescription').value = waiver.description || '';
 

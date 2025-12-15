@@ -982,74 +982,115 @@ body {
     font-weight: 400;
 }
 
-.default-fields {
+/* Quick Add Fields */
+.quick-add-fields {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.5rem;
     margin-bottom: 1rem;
-    padding: 0.875rem;
-    background: #f0f9ff;
+    padding: 0.75rem;
+    background: #f8fafc;
     border-radius: 8px;
-    border: 1px solid #bae6fd;
+    border: 1px dashed #cbd5e1;
 }
-.default-field {
+.quick-add-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+}
+.quick-add-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.375rem 0.625rem;
+    padding: 0.375rem 0.75rem;
     background: white;
+    border: 1px solid #e2e8f0;
     border-radius: 6px;
     font-size: 0.8rem;
-    color: #334155;
-    border: 1px solid #e2e8f0;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
 }
-.default-field i {
+.quick-add-btn:hover {
+    background: #f0f9ff;
+    border-color: #0f4f9f;
     color: #0f4f9f;
+}
+.quick-add-btn.added {
+    background: #dcfce7;
+    border-color: #16a34a;
+    color: #166534;
+    cursor: default;
+    opacity: 0.7;
+}
+.quick-add-btn.added:hover {
+    background: #dcfce7;
+    border-color: #16a34a;
+    color: #166534;
+}
+.quick-add-btn i {
     font-size: 0.75rem;
 }
-.default-field .req {
-    font-size: 0.6rem;
-    color: #166534;
-    background: #dcfce7;
-    padding: 0.125rem 0.375rem;
-    border-radius: 3px;
-    margin-left: 0.25rem;
-}
-.default-field .opt {
-    font-size: 0.6rem;
+
+/* Empty Fields Message */
+.empty-fields-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px dashed #cbd5e1;
     color: #64748b;
-    background: #f1f5f9;
-    padding: 0.125rem 0.375rem;
-    border-radius: 3px;
-    margin-left: 0.25rem;
+    font-size: 0.8rem;
+}
+.empty-fields-message i {
+    color: #94a3b8;
+}
+.empty-fields-message.hidden {
+    display: none;
 }
 
-#registration-fields-container:empty::before {
-    content: 'No custom fields added yet';
-    display: block;
-    padding: 1.5rem;
-    text-align: center;
-    color: #94a3b8;
-    font-size: 0.875rem;
-    background: #f8fafc;
-    border: 2px dashed #e2e8f0;
-    border-radius: 8px;
-}
 
 .custom-field-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.75rem;
     padding: 0.75rem 1rem;
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     margin-bottom: 0.5rem;
+    cursor: grab;
+    transition: all 0.2s;
+}
+.custom-field-item:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.custom-field-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+.custom-field-item.drag-over {
+    border-color: #0f4f9f;
+    border-style: dashed;
+    background: #f0f9ff;
+}
+.custom-field-item .drag-handle {
+    color: #cbd5e1;
+    cursor: grab;
+    padding: 0.25rem;
+}
+.custom-field-item .drag-handle:hover {
+    color: #94a3b8;
 }
 .custom-field-info {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex: 1;
 }
 .custom-field-info i {
     color: #64748b;
@@ -1072,16 +1113,28 @@ body {
     color: #dc2626;
     margin-left: 0.25rem;
 }
+.field-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.edit-field-btn,
 .remove-field-btn {
     background: none;
     border: none;
     color: #94a3b8;
     cursor: pointer;
-    padding: 0.25rem;
-    transition: color 0.2s;
+    padding: 0.375rem;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+.edit-field-btn:hover {
+    color: #0f4f9f;
+    background: #f0f9ff;
 }
 .remove-field-btn:hover {
     color: #ef4444;
+    background: #fef2f2;
 }
 
 /* Field Type Grid (Modal) */

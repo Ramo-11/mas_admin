@@ -742,22 +742,25 @@
                                             </button>
                                         </div>
 
-                                        <div class="default-fields">
-                                            <div class="default-field">
+                                        <div class="quick-add-fields">
+                                            <span class="quick-add-label">Quick add:</span>
+                                            <button type="button" class="quick-add-btn" data-field="fullName">
                                                 <i class="fas fa-user"></i> Full Name
-                                                <span class="req">Required</span>
-                                            </div>
-                                            <div class="default-field">
+                                            </button>
+                                            <button type="button" class="quick-add-btn" data-field="email">
                                                 <i class="fas fa-envelope"></i> Email
-                                                <span class="req">Required</span>
-                                            </div>
-                                            <div class="default-field">
+                                            </button>
+                                            <button type="button" class="quick-add-btn" data-field="phone">
                                                 <i class="fas fa-phone"></i> Phone
-                                                <span class="opt">Optional</span>
-                                            </div>
+                                            </button>
                                         </div>
 
                                         <div id="registration-fields-container"></div>
+
+                                        <div id="empty-fields-message" class="empty-fields-message">
+                                            <i class="fas fa-info-circle"></i>
+                                            No fields added yet. Use quick add buttons above or click "Add Field" for custom fields.
+                                        </div>
                                     </div>
 
                                     <!-- Waiver/Consent Section -->
@@ -1061,7 +1064,7 @@
         <div class="modal modal-sm" id="field-modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Add Registration Field</h2>
+                    <h2 id="field-modal-title">Add Field</h2>
                     <button class="close" id="close-field-modal">&times;</button>
                 </div>
                 <div class="modal-body">
