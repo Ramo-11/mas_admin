@@ -20,7 +20,7 @@ const registrationSchema = new mongoose.Schema(
         },
         email: {
             type: String,
-            required: true,
+            required: false,
             trim: true,
             lowercase: true,
             index: true,
@@ -28,7 +28,6 @@ const registrationSchema = new mongoose.Schema(
         confirmationNumber: {
             type: String,
             unique: true,
-            required: true,
         },
         registeredAt: {
             type: Date,
@@ -76,8 +75,11 @@ const registrationSchema = new mongoose.Schema(
     }
 );
 
-// Indexes
-registrationSchema.index({ event: 1, email: 1 }, { unique: true });
+// Indexes - only enforce uniqueness when email is present
+registrationSchema.index(
+    { event: 1, email: 1 },
+    { unique: true, partialFilterExpression: { email: { $type: 'string', $ne: '' } } }
+);
 registrationSchema.index({ status: 1, event: 1 });
 
 // Generate confirmation number before saving
