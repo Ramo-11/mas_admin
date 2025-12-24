@@ -465,7 +465,8 @@ class EventManager {
             radio: 'fa-dot-circle',
             checkbox: 'fa-check-square',
             number: 'fa-hashtag',
-            email: 'fa-at',
+            email: 'fa-envelope',
+            phone: 'fa-phone',
             date: 'fa-calendar',
         };
 
@@ -477,6 +478,7 @@ class EventManager {
             checkbox: 'Multi Choice',
             number: 'Number',
             email: 'Email',
+            phone: 'Phone',
             date: 'Date',
         };
 
