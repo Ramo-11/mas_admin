@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Registration Management</title>
+        <link rel="stylesheet" href="/css/common.css" />
         <link rel="stylesheet" href="/css/admin-dashboard.css" />
         <link rel="stylesheet" href="/css/registrations.css" />
         <link
@@ -21,6 +22,22 @@
                 <a href="/registrations" class="nav-tab active">
                     <i class="fas fa-users"></i> Registrations
                 </a>
+                <% if (user && user.role === 'super_admin') { %>
+                <a href="/users" class="nav-tab">
+                    <i class="fas fa-user-cog"></i> Users
+                </a>
+                <a href="/activity-logs" class="nav-tab">
+                    <i class="fas fa-history"></i> Activity Logs
+                </a>
+                <% } %>
+                <div class="nav-spacer"></div>
+                <div class="nav-user">
+                    <span class="user-name"><%= user ? user.name : '' %></span>
+                    <span class="user-role <%= user ? user.role : '' %>"><%= user && user.role === 'super_admin' ? 'Super Admin' : 'Event Admin' %></span>
+                    <a href="/logout" class="nav-tab logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
             </nav>
 
             <!-- Header -->
@@ -181,6 +198,14 @@
             </div>
         </div>
 
+        <script>
+            // Pass user permissions to JavaScript
+            window.userPermissions = {
+                role: '<%= user ? user.role : "event_admin" %>',
+                canDeleteEvents: '<%= user && (user.role === \'super_admin\' || (user.permissions && user.permissions.canDeleteEvents)) ? \'true\' : \'false\' %>',
+                canDeleteRegistrations: '<%= user && (user.role === \'super_admin\' || (user.permissions && user.permissions.canDeleteRegistrations)) ? \'true\' : \'false\' %>'
+            };
+        </script>
         <script src="/js/registrations.js"></script>
     </body>
 </html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Activity Logs - Admin Dashboard</title>
+        <link rel="stylesheet" href="/css/common.css" />
+        <link rel="stylesheet" href="/css/admin-dashboard.css" />
+        <link rel="stylesheet" href="/css/activity-logs.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        />
+    </head>
+    <body>
+        <div class="container">
+            <!-- Navigation -->
+            <nav class="nav-tabs">
+                <a href="/" class="nav-tab">
+                    <i class="fas fa-calendar-alt"></i> Events
+                </a>
+                <a href="/registrations" class="nav-tab">
+                    <i class="fas fa-users"></i> Registrations
+                </a>
+                <% if (user && user.role === 'super_admin') { %>
+                <a href="/users" class="nav-tab">
+                    <i class="fas fa-user-cog"></i> Users
+                </a>
+                <a href="/activity-logs" class="nav-tab active">
+                    <i class="fas fa-history"></i> Activity Logs
+                </a>
+                <% } %>
+                <div class="nav-spacer"></div>
+                <div class="nav-user">
+                    <span class="user-name"><%= user ? user.name : '' %></span>
+                    <span class="user-role <%= user ? user.role : '' %>"><%= user && user.role === 'super_admin' ? 'Super Admin' : 'Event Admin' %></span>
+                    <a href="/logout" class="nav-tab logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </nav>
+
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-history"></i> Activity Logs</h1>
+                <p>Track all user actions across the system</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon stat-total"><i class="fas fa-list"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-total">0</div>
+                        <div class="stat-label">Total Logs</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-today"><i class="fas fa-clock"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-today">0</div>
+                        <div class="stat-label">Today</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-create"><i class="fas fa-plus-circle"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-create">0</div>
+                        <div class="stat-label">Creates</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-delete"><i class="fas fa-trash"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-delete">0</div>
+                        <div class="stat-label">Deletes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="actions">
+                <div class="filters">
+                    <select id="filter-action" class="filter-select">
+                        <option value="">All Actions</option>
+                        <option value="create">Create</option>
+                        <option value="update">Update</option>
+                        <option value="delete">Delete</option>
+                        <option value="login">Login</option>
+                        <option value="logout">Logout</option>
+                    </select>
+                    <select id="filter-resource" class="filter-select">
+                        <option value="">All Resources</option>
+                        <option value="event">Events</option>
+                        <option value="registration">Registrations</option>
+                        <option value="user">Users</option>
+                    </select>
+                    <select id="filter-user" class="filter-select">
+                        <option value="">All Users</option>
+                        <% if (users) { users.forEach(u => { %>
+                        <option value="<%= u._id %>"><%= u.name %></option>
+                        <% }); } %>
+                    </select>
+                    <input type="date" id="filter-start-date" class="filter-input" placeholder="Start Date" />
+                    <input type="date" id="filter-end-date" class="filter-input" placeholder="End Date" />
+                </div>
+            </div>
+
+            <!-- Activity Logs Table -->
+            <div class="table-container">
+                <table class="activity-table">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Resource</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activity-table">
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <div class="empty-content">
+                                    <i class="fas fa-history"></i>
+                                    <h3>No activity logs found</h3>
+                                    <p>Activity will appear here as users perform actions</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <button class="btn btn-secondary" id="prev-page" disabled>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <span class="page-info">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
+                <button class="btn btn-secondary" id="next-page" disabled>
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <script src="/js/activity-logs.js"></script>
+    </body>
+</html>

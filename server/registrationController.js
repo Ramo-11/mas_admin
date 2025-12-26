@@ -1,6 +1,15 @@
 const Registration = require('../models/Registration');
 const Event = require('../models/Event');
 const { logger } = require('./logger');
+const { hasEventAccess } = require('./authMiddleware');
+const { logActivity } = require('./activityLogController');
+
+// Helper to get accessible event filter for user
+const getAccessFilter = (user) => {
+    if (!user) return { event: { $in: [] } }; // No access
+    if (user.role === 'super_admin') return {}; // All registrations
+    return { event: { $in: user.assignedEvents } }; // Only assigned events
+};
 
 const getRegistrations = async (req, res) => {
     try {
@@ -14,7 +23,8 @@ const getRegistrations = async (req, res) => {
             sortOrder = 'desc',
         } = req.query;
 
-        const filter = {};
+        // Start with access filter based on user role
+        const filter = { ...getAccessFilter(req.user) };
 
         if (search) {
             filter.$or = [
@@ -24,7 +34,13 @@ const getRegistrations = async (req, res) => {
         }
 
         if (status) filter.status = status;
-        if (event) filter.event = event;
+        if (event) {
+            // Verify user has access to this event
+            if (!hasEventAccess(req.user, event)) {
+                return res.status(403).json({ message: 'Access denied to this event' });
+            }
+            filter.event = event;
+        }
 
         const sort = {};
         sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
@@ -72,6 +88,11 @@ const getRegistrationById = async (req, res) => {
             return res.status(404).json({ message: 'Registration not found' });
         }
 
+        // Check if user has access to this registration's event
+        if (!hasEventAccess(req.user, registration.event._id)) {
+            return res.status(403).json({ message: 'Access denied to this registration' });
+        }
+
         return res.status(200).json({ registration });
     } catch (error) {
         logger.error(`Error getting registration by ID: ${error.message} - Stack: ${error.stack}`);
@@ -89,6 +110,11 @@ const getRegistrationsByEvent = async (req, res) => {
             sortBy = 'registeredAt',
             sortOrder = 'desc',
         } = req.query;
+
+        // Check if user has access to this event
+        if (!hasEventAccess(req.user, eventId)) {
+            return res.status(403).json({ message: 'Access denied to this event' });
+        }
 
         const filter = { event: eventId };
         if (status) filter.status = status;
@@ -135,6 +161,17 @@ const updateRegistrationStatus = async (req, res) => {
             });
         }
 
+        // First get the registration to check access
+        const existingReg = await Registration.findById(req.params.id);
+        if (!existingReg) {
+            return res.status(404).json({ message: 'Registration not found' });
+        }
+
+        // Check if user has access to this registration's event
+        if (!hasEventAccess(req.user, existingReg.event)) {
+            return res.status(403).json({ message: 'Access denied to this registration' });
+        }
+
         const registration = await Registration.findByIdAndUpdate(
             req.params.id,
             {
@@ -144,8 +181,17 @@ const updateRegistrationStatus = async (req, res) => {
             { new: true, runValidators: true }
         ).populate('event', 'title');
 
-        if (!registration) {
-            return res.status(404).json({ message: 'Registration not found' });
+        // Log activity
+        if (req.user) {
+            await logActivity(
+                req.user,
+                'update',
+                'registration',
+                registration._id,
+                registration.confirmationNumber,
+                `Updated registration status to: ${status}`,
+                req.ip
+            );
         }
 
         logger.info(`Registration status updated: ${registration.confirmationNumber} -> ${status}`);
@@ -165,6 +211,17 @@ const updateRegistration = async (req, res) => {
     try {
         const { notes, registrationData, status } = req.body;
 
+        // First get the registration to check access
+        const existingReg = await Registration.findById(req.params.id);
+        if (!existingReg) {
+            return res.status(404).json({ message: 'Registration not found' });
+        }
+
+        // Check if user has access to this registration's event
+        if (!hasEventAccess(req.user, existingReg.event)) {
+            return res.status(403).json({ message: 'Access denied to this registration' });
+        }
+
         const updateData = {};
         if (notes !== undefined) updateData.notes = notes;
         if (registrationData !== undefined) updateData.registrationData = registrationData;
@@ -179,8 +236,17 @@ const updateRegistration = async (req, res) => {
             { new: true, runValidators: true }
         ).populate('event', 'title');
 
-        if (!registration) {
-            return res.status(404).json({ message: 'Registration not found' });
+        // Log activity
+        if (req.user) {
+            await logActivity(
+                req.user,
+                'update',
+                'registration',
+                registration._id,
+                registration.confirmationNumber,
+                `Updated registration: ${registration.confirmationNumber}`,
+                req.ip
+            );
         }
 
         logger.info(`Registration updated: ${registration.confirmationNumber}`);
@@ -203,12 +269,35 @@ const deleteRegistration = async (req, res) => {
             return res.status(404).json({ message: 'Registration not found' });
         }
 
+        // Check if user has access to this registration's event
+        if (!hasEventAccess(req.user, registration.event)) {
+            return res.status(403).json({ message: 'Access denied to this registration' });
+        }
+
+        // Check if user has delete permission
+        if (!req.user.canDeleteRegistrations()) {
+            return res.status(403).json({ message: 'You do not have permission to delete registrations' });
+        }
+
         // Soft delete - mark as cancelled
         const updatedRegistration = await Registration.findByIdAndUpdate(
             req.params.id,
             { status: 'cancelled' },
             { new: true }
         );
+
+        // Log activity
+        if (req.user) {
+            await logActivity(
+                req.user,
+                'delete',
+                'registration',
+                updatedRegistration._id,
+                updatedRegistration.confirmationNumber,
+                `Cancelled registration: ${updatedRegistration.confirmationNumber}`,
+                req.ip
+            );
+        }
 
         logger.info(`Registration cancelled: ${updatedRegistration.confirmationNumber}`);
         return res.status(200).json({ message: 'Registration cancelled successfully' });
@@ -222,12 +311,40 @@ const deleteRegistration = async (req, res) => {
 
 const permanentDeleteRegistration = async (req, res) => {
     try {
-        const deletedRegistration = await Registration.findByIdAndDelete(req.params.id);
-        if (!deletedRegistration) {
+        const registration = await Registration.findById(req.params.id);
+        if (!registration) {
             return res.status(404).json({ message: 'Registration not found' });
         }
 
-        logger.info(`Registration permanently deleted: ${deletedRegistration.confirmationNumber}`);
+        // Check if user has access to this registration's event
+        if (!hasEventAccess(req.user, registration.event)) {
+            return res.status(403).json({ message: 'Access denied to this registration' });
+        }
+
+        // Check if user has delete permission
+        if (!req.user.canDeleteRegistrations()) {
+            return res.status(403).json({ message: 'You do not have permission to delete registrations' });
+        }
+
+        const confirmationNumber = registration.confirmationNumber;
+        const registrationId = registration._id;
+
+        await Registration.findByIdAndDelete(req.params.id);
+
+        // Log activity
+        if (req.user) {
+            await logActivity(
+                req.user,
+                'delete',
+                'registration',
+                registrationId,
+                confirmationNumber,
+                `Permanently deleted registration: ${confirmationNumber}`,
+                req.ip
+            );
+        }
+
+        logger.info(`Registration permanently deleted: ${confirmationNumber}`);
         return res.status(200).json({ message: 'Registration permanently deleted' });
     } catch (error) {
         logger.error(`Error permanently deleting registration: ${error.message}`);
@@ -239,28 +356,38 @@ const permanentDeleteRegistration = async (req, res) => {
 
 const getRegistrationStats = async (req, res) => {
     try {
-        const stats = await Registration.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    totalRegistrations: { $sum: 1 },
-                    confirmed: {
-                        $sum: { $cond: [{ $eq: ['$status', 'confirmed'] }, 1, 0] },
-                    },
-                    pending: {
-                        $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] },
-                    },
-                    cancelled: {
-                        $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] },
-                    },
-                    waitlisted: {
-                        $sum: { $cond: [{ $eq: ['$status', 'waitlisted'] }, 1, 0] },
-                    },
+        // Build match filter based on user access
+        const accessFilter = getAccessFilter(req.user);
+        const matchStage = Object.keys(accessFilter).length > 0 ? { $match: accessFilter } : null;
+
+        const pipeline = [];
+        if (matchStage) pipeline.push(matchStage);
+
+        pipeline.push({
+            $group: {
+                _id: null,
+                totalRegistrations: { $sum: 1 },
+                confirmed: {
+                    $sum: { $cond: [{ $eq: ['$status', 'confirmed'] }, 1, 0] },
+                },
+                pending: {
+                    $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] },
+                },
+                cancelled: {
+                    $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] },
+                },
+                waitlisted: {
+                    $sum: { $cond: [{ $eq: ['$status', 'waitlisted'] }, 1, 0] },
                 },
             },
-        ]);
+        });
 
-        const eventStats = await Registration.aggregate([
+        const stats = await Registration.aggregate(pipeline);
+
+        // Event stats with access filter
+        const eventPipeline = [];
+        if (matchStage) eventPipeline.push(matchStage);
+        eventPipeline.push(
             { $match: { status: { $in: ['confirmed', 'pending'] } } },
             { $group: { _id: '$event', count: { $sum: 1 } } },
             { $sort: { count: -1 } },
@@ -280,8 +407,10 @@ const getRegistrationStats = async (req, res) => {
                     eventDate: '$event.eventDate',
                     count: 1,
                 },
-            },
-        ]);
+            }
+        );
+
+        const eventStats = await Registration.aggregate(eventPipeline);
 
         const result = stats[0] || {
             totalRegistrations: 0,
@@ -316,8 +445,21 @@ const bulkUpdateStatus = async (req, res) => {
             });
         }
 
+        // Filter IDs to only those the user has access to
+        const accessFilter = getAccessFilter(req.user);
+        const accessibleRegs = await Registration.find({
+            _id: { $in: ids },
+            ...accessFilter,
+        }).select('_id');
+
+        const accessibleIds = accessibleRegs.map(r => r._id);
+
+        if (accessibleIds.length === 0) {
+            return res.status(403).json({ message: 'No accessible registrations found' });
+        }
+
         const result = await Registration.updateMany(
-            { _id: { $in: ids } },
+            { _id: { $in: accessibleIds } },
             {
                 status,
                 isWaitlisted: status === 'waitlisted',
@@ -341,8 +483,16 @@ const exportRegistrations = async (req, res) => {
     try {
         const { eventId, format = 'json', status } = req.query;
 
-        const filter = {};
-        if (eventId) filter.event = eventId;
+        // Start with access filter
+        const filter = { ...getAccessFilter(req.user) };
+
+        if (eventId) {
+            // Verify user has access to this event
+            if (!hasEventAccess(req.user, eventId)) {
+                return res.status(403).json({ message: 'Access denied to this event' });
+            }
+            filter.event = eventId;
+        }
         if (status) filter.status = status;
 
         const registrations = await Registration.find(filter)

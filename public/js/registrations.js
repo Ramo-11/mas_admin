@@ -358,9 +358,11 @@ class RegistrationManager {
                                     <i class="fas fa-times"></i>
                                 </button>
                             ` : ''}
-                            <button class="btn btn-sm btn-delete-permanent" data-id="${reg._id}" title="Delete Permanently">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            ${window.userPermissions?.canDeleteRegistrations ? `
+                                <button class="btn btn-sm btn-delete-permanent" data-id="${reg._id}" title="Delete Permanently">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            ` : ''}
                         </div>
                     </td>
                 </tr>

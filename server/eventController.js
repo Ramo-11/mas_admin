@@ -1,6 +1,15 @@
 const { log } = require('winston');
 const Event = require('../models/Event');
 const { logger } = require('./logger');
+const { hasEventAccess } = require('./authMiddleware');
+const { logActivity } = require('./activityLogController');
+
+// Helper to get accessible event filter for user
+const getEventAccessFilter = (user) => {
+    if (!user) return { _id: { $in: [] } }; // No access
+    if (user.role === 'super_admin') return {}; // All events
+    return { _id: { $in: user.assignedEvents } }; // Only assigned events
+};
 
 // Slug generator utility
 class SlugGenerator {
@@ -77,8 +86,9 @@ const getEvents = async (req, res) => {
             sortOrder = 'desc',
         } = req.query;
 
-        // Build filter object
-        const filter = { isArchived: { $ne: true } };
+        // Build filter object with user access filter
+        const accessFilter = getEventAccessFilter(req.user);
+        const filter = { isArchived: { $ne: true }, ...accessFilter };
 
         if (search) {
             filter.$or = [
@@ -135,6 +145,11 @@ const getEventById = async (req, res) => {
 
         if (!event) {
             return res.status(404).json({ message: 'Event not found' });
+        }
+
+        // Check if user has access to this event
+        if (!hasEventAccess(req.user, event._id)) {
+            return res.status(403).json({ message: 'Access denied to this event' });
         }
 
         return res.status(200).json({ event });
@@ -249,6 +264,19 @@ const createEvent = async (req, res) => {
 
         await newEvent.save();
 
+        // Log activity
+        if (req.user) {
+            await logActivity(
+                req.user,
+                'create',
+                'event',
+                newEvent._id,
+                newEvent.title,
+                `Created event: ${newEvent.title}`,
+                req.ip
+            );
+        }
+
         logger.info(`Event created successfully: ${newEvent.title}`);
         return res.status(201).json({
             message: 'Event created successfully',
@@ -290,6 +318,11 @@ const updateEvent = async (req, res) => {
         const existingEvent = await Event.findById(req.params.id);
         if (!existingEvent) {
             return res.status(404).json({ message: 'Event not found' });
+        }
+
+        // Check if user has access to this event
+        if (!hasEventAccess(req.user, existingEvent._id)) {
+            return res.status(403).json({ message: 'Access denied to this event' });
         }
 
         let slug = existingEvent.slug;
@@ -368,6 +401,19 @@ const updateEvent = async (req, res) => {
             runValidators: true,
         }).populate('speakers', 'name title organization');
 
+        // Log activity
+        if (req.user) {
+            await logActivity(
+                req.user,
+                'update',
+                'event',
+                updatedEvent._id,
+                updatedEvent.title,
+                `Updated event: ${updatedEvent.title}`,
+                req.ip
+            );
+        }
+
         logger.info(`Event updated successfully: ${updatedEvent.title}`);
         return res.status(200).json({
             message: 'Event updated successfully',
@@ -388,6 +434,16 @@ const deleteEvent = async (req, res) => {
             return res.status(404).json({ message: 'Event not found' });
         }
 
+        // Check if user has access to this event
+        if (!hasEventAccess(req.user, event._id)) {
+            return res.status(403).json({ message: 'Access denied to this event' });
+        }
+
+        // Check if user has delete permission
+        if (!req.user.canDeleteEvents()) {
+            return res.status(403).json({ message: 'You do not have permission to delete events' });
+        }
+
         // Soft delete - mark as archived instead of hard delete
         const updatedEvent = await Event.findByIdAndUpdate(
             req.params.id,
@@ -398,6 +454,19 @@ const deleteEvent = async (req, res) => {
             },
             { new: true }
         );
+
+        // Log activity
+        if (req.user) {
+            await logActivity(
+                req.user,
+                'delete',
+                'event',
+                updatedEvent._id,
+                updatedEvent.title,
+                `Archived event: ${updatedEvent.title}`,
+                req.ip
+            );
+        }
 
         logger.info(`Event archived successfully: ${updatedEvent.title}`);
         return res.status(200).json({ message: 'Event archived successfully' });
@@ -411,12 +480,40 @@ const deleteEvent = async (req, res) => {
 
 const permanentDeleteEvent = async (req, res) => {
     try {
-        const deletedEvent = await Event.findByIdAndDelete(req.params.id);
-        if (!deletedEvent) {
+        const event = await Event.findById(req.params.id);
+        if (!event) {
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        logger.info(`Event permanently deleted: ${deletedEvent.title}`);
+        // Check if user has access to this event
+        if (!hasEventAccess(req.user, event._id)) {
+            return res.status(403).json({ message: 'Access denied to this event' });
+        }
+
+        // Check if user has delete permission
+        if (!req.user.canDeleteEvents()) {
+            return res.status(403).json({ message: 'You do not have permission to delete events' });
+        }
+
+        const eventTitle = event.title;
+        const eventId = event._id;
+
+        await Event.findByIdAndDelete(req.params.id);
+
+        // Log activity
+        if (req.user) {
+            await logActivity(
+                req.user,
+                'delete',
+                'event',
+                eventId,
+                eventTitle,
+                `Permanently deleted event: ${eventTitle}`,
+                req.ip
+            );
+        }
+
+        logger.info(`Event permanently deleted: ${eventTitle}`);
         return res.status(200).json({ message: 'Event permanently deleted' });
     } catch (error) {
         logger.error(`Error permanently deleting event: ${error.message}`);

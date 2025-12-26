@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>User Management</title>
+        <link rel="stylesheet" href="/css/common.css" />
+        <link rel="stylesheet" href="/css/admin-dashboard.css" />
+        <link rel="stylesheet" href="/css/users.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        />
+    </head>
+    <body>
+        <div class="container">
+            <!-- Navigation -->
+            <nav class="nav-tabs">
+                <a href="/" class="nav-tab">
+                    <i class="fas fa-calendar-alt"></i> Events
+                </a>
+                <a href="/registrations" class="nav-tab">
+                    <i class="fas fa-users"></i> Registrations
+                </a>
+                <a href="/users" class="nav-tab active">
+                    <i class="fas fa-user-cog"></i> Users
+                </a>
+                <a href="/activity-logs" class="nav-tab">
+                    <i class="fas fa-history"></i> Activity Logs
+                </a>
+                <div class="nav-spacer"></div>
+                <div class="nav-user">
+                    <span class="user-name"><%= user.name %></span>
+                    <span class="user-role <%= user.role %>"><%= user.role === 'super_admin' ? 'Super Admin' : 'Event Admin' %></span>
+                    <a href="/logout" class="nav-tab logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </nav>
+
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-user-cog"></i> User Management</h1>
+                <p>Manage admin users and their access to events</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-total">0</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-super"><i class="fas fa-user-shield"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-super">0</div>
+                        <div class="stat-label">Super Admins</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-event"><i class="fas fa-user-tag"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-event">0</div>
+                        <div class="stat-label">Event Admins</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-inactive"><i class="fas fa-user-slash"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stat-inactive">0</div>
+                        <div class="stat-label">Inactive</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Bar -->
+            <div class="actions">
+                <button class="btn btn-primary" id="create-user-btn">
+                    <i class="fas fa-plus"></i> Add User
+                </button>
+                <div class="filters">
+                    <input
+                        type="text"
+                        id="search"
+                        placeholder="Search users..."
+                        class="search-input"
+                    />
+                    <select id="filter-role" class="filter-select">
+                        <option value="">All Roles</option>
+                        <option value="super_admin">Super Admin</option>
+                        <option value="event_admin">Event Admin</option>
+                    </select>
+                    <select id="filter-status" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="table-container">
+                <table class="events-table users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Assigned Events</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <div class="empty-content">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <h3>Loading users...</h3>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Create/Edit User Modal -->
+        <div class="modal" id="user-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Add User</h2>
+                    <button class="close" id="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="user-form">
+                        <input type="hidden" id="user-id" />
+
+                        <div class="form-group">
+                            <label for="user-name">Name *</label>
+                            <input type="text" id="user-name" required placeholder="Enter full name" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="user-email">Email *</label>
+                            <input type="email" id="user-email" required placeholder="Enter email address" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="user-password">Password <span id="password-hint">(required)</span></label>
+                            <input type="password" id="user-password" placeholder="Enter password" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="user-role">Role *</label>
+                            <select id="user-role" required>
+                                <option value="event_admin">Event Admin</option>
+                                <option value="super_admin">Super Admin</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="events-group">
+                            <label>Assigned Events</label>
+                            <p class="help-text">Select events this user can manage. Only applicable for Event Admins.</p>
+                            <div class="events-list" id="events-list">
+                                <% events.forEach(event => { %>
+                                <label class="event-checkbox">
+                                    <input type="checkbox" name="assignedEvents" value="<%= event._id %>" />
+                                    <span class="event-title"><%= event.title %></span>
+                                    <span class="event-date"><%= new Date(event.eventDate).toLocaleDateString() %></span>
+                                </label>
+                                <% }); %>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="permissions-group">
+                            <label>Permissions</label>
+                            <p class="help-text">Grant additional permissions to this Event Admin.</p>
+                            <div class="permissions-list">
+                                <label class="toggle-container">
+                                    <input type="checkbox" id="perm-delete-events" />
+                                    <span class="toggle-label">Can delete events</span>
+                                </label>
+                                <label class="toggle-container">
+                                    <input type="checkbox" id="perm-delete-registrations" />
+                                    <span class="toggle-label">Can delete registrations</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="toggle-container">
+                                <input type="checkbox" id="user-active" checked />
+                                <span class="toggle-label">Active</span>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-user-btn">
+                        <i class="fas fa-save"></i> Save User
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Dialog -->
+        <div class="modal modal-sm" id="confirm-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Confirm Action</h2>
+                    <button class="close" id="close-confirm-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirm-message">Are you sure you want to perform this action?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-confirm-btn">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="proceed-confirm-btn">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/js/users.js"></script>
+    </body>
+</html>

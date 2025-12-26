@@ -1601,9 +1601,9 @@ class EventManager {
                             <button class="btn btn-sm btn-duplicate" data-id="${
                                 e._id
                             }" title="Duplicate"><i class="fas fa-copy"></i></button>
-                            <button class="btn btn-sm btn-delete" data-id="${
+                            ${window.userPermissions?.canDeleteEvents ? `<button class="btn btn-sm btn-delete" data-id="${
                                 e._id
-                            }" title="Delete"><i class="fas fa-trash"></i></button>
+                            }" title="Delete"><i class="fas fa-trash"></i></button>` : ''}
                         </div>
                     </td>
                 </tr>
