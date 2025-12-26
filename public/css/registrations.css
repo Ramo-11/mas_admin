@@ -120,6 +120,10 @@
 /* ========================================
    Registrations Table
    ======================================== */
+.registrations-table {
+    min-width: 500px;
+}
+
 .registrations-table .registrant-info {
     display: flex;
     flex-direction: column;
@@ -615,6 +619,7 @@
         width: 100%;
     }
 
+    /* Hide less important columns on tablet */
     .registrations-table th:nth-child(5),
     .registrations-table td:nth-child(5),
     .registrations-table th:nth-child(6),
@@ -625,11 +630,31 @@
     .pagination {
         flex-wrap: wrap;
     }
+
+    /* Ensure action buttons are always visible */
+    .registrations-table .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    .registrations-table .action-buttons .btn-sm {
+        min-width: 36px;
+        min-height: 36px;
+        padding: 0.5rem;
+    }
 }
 
 @media (max-width: 480px) {
+    /* Hide event column on small phones */
     .registrations-table th:nth-child(3),
     .registrations-table td:nth-child(3) {
+        display: none;
+    }
+
+    /* Hide checkbox column on very small screens */
+    .registrations-table th:nth-child(1),
+    .registrations-table td:nth-child(1) {
         display: none;
     }
 
@@ -639,6 +664,55 @@
 
     .status-option {
         justify-content: center;
+    }
+
+    /* Make action buttons larger for touch on mobile */
+    .registrations-table .action-buttons {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.25rem;
+    }
+
+    .registrations-table .action-buttons .btn-sm {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .registrations-table .action-buttons .btn-sm i {
+        font-size: 1rem;
+    }
+
+    /* Reduce padding in table cells */
+    .registrations-table th,
+    .registrations-table td {
+        padding: 0.5rem;
+    }
+
+    /* Make status badge smaller */
+    .registrations-table .badge {
+        font-size: 0.55rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    /* Adjust registrant info for mobile */
+    .registrant-info .email {
+        font-size: 0.8rem;
+        word-break: break-all;
+    }
+
+    .registrant-info .name {
+        font-size: 0.75rem;
+    }
+
+    .registrant-info .phone {
+        font-size: 0.7rem;
+    }
+
+    /* Hide status dropdown arrow on mobile to save space */
+    .status-dropdown-btn {
+        display: none;
     }
 }
 

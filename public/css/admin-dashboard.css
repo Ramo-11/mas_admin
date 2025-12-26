@@ -198,13 +198,15 @@ body {
 .table-container {
     background: white;
     border-radius: 10px;
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     border: 1px solid #e2e8f0;
 }
 .events-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 500px;
 }
 .events-table th,
 .events-table td {
@@ -1364,6 +1366,27 @@ body {
     .day-selector {
         flex-wrap: wrap;
     }
+
+    /* Hide less important columns on tablet */
+    .events-table th:nth-child(2),
+    .events-table td:nth-child(2),
+    .events-table th:nth-child(5),
+    .events-table td:nth-child(5) {
+        display: none;
+    }
+
+    /* Ensure action buttons are always visible */
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    .action-buttons .btn-sm {
+        min-width: 36px;
+        min-height: 36px;
+        padding: 0.5rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1377,6 +1400,57 @@ body {
         width: 36px;
         height: 36px;
         font-size: 0.75rem;
+    }
+
+    /* Hide more columns on small phones */
+    .events-table th:nth-child(3),
+    .events-table td:nth-child(3),
+    .events-table th:nth-child(4),
+    .events-table td:nth-child(4) {
+        display: none;
+    }
+
+    /* Make action buttons larger for touch on mobile */
+    .action-buttons {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.25rem;
+    }
+
+    .action-buttons .btn-sm {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .action-buttons .btn-sm i {
+        font-size: 1rem;
+    }
+
+    /* Reduce padding in table cells */
+    .events-table th,
+    .events-table td {
+        padding: 0.5rem;
+    }
+
+    /* Adjust event info for mobile */
+    .event-info strong {
+        font-size: 0.8rem;
+    }
+
+    .event-desc {
+        font-size: 0.7rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Make badges smaller */
+    .badge {
+        font-size: 0.55rem;
+        padding: 0.2rem 0.4rem;
     }
 }
 
