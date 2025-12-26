@@ -202,8 +202,8 @@
             // Pass user permissions to JavaScript
             window.userPermissions = {
                 role: '<%= user ? user.role : "event_admin" %>',
-                canDeleteEvents: '<%= user && (user.role === \'super_admin\' || (user.permissions && user.permissions.canDeleteEvents)) ? \'true\' : \'false\' %>',
-                canDeleteRegistrations: '<%= user && (user.role === \'super_admin\' || (user.permissions && user.permissions.canDeleteRegistrations)) ? \'true\' : \'false\' %>'
+                canDeleteEvents: <%= user && (user.role === 'super_admin' || (user.permissions && user.permissions.canDeleteEvents)) ? 'true' : 'false' %>,
+                canDeleteRegistrations: <%= user && (user.role === 'super_admin' || (user.permissions && user.permissions.canDeleteRegistrations)) ? 'true' : 'false' %>
             };
         </script>
         <script src="/js/registrations.js"></script>
