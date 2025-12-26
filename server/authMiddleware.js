@@ -67,9 +67,13 @@ const getEventFilter = (user) => {
 const hasEventAccess = (user, eventId) => {
     if (!user) return false;
     if (user.role === 'super_admin') return true;
-    return user.assignedEvents.some(
-        (id) => id.toString() === eventId.toString()
-    );
+
+    const eventIdStr = eventId.toString();
+    return user.assignedEvents.some((event) => {
+        // Handle both populated objects and ObjectIds
+        const id = event._id ? event._id : event;
+        return id.toString() === eventIdStr;
+    });
 };
 
 module.exports = {
